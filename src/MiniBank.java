@@ -2,6 +2,7 @@ import java.util.Scanner;
 import model.*;
 import util.*;
 import service.*;
+import exception.*;
 
 // Practical 6: Static import to use Validator methods directly
 import static util.Validator.*;
@@ -16,6 +17,9 @@ import static util.Validator.*;
  * Practical 6: Interfaces (Transactable, InterestBearing, Premium),
  *              lambdas (WithdrawRule), package organization, static import.
  * Practical 7: Custom annotations (@Id, @Positive, @MaxLength) and reflection validation.
+ * Practical 8: Custom exception hierarchy (BankException, InsufficientFundsException,
+ *              InvalidAmountException, AccountNotFoundException), atomic transfers,
+ *              try-catch-finally, try-with-resources.
  *
  * @author Bhavy Pan (25CE098)
  */
@@ -46,6 +50,9 @@ public class MiniBank {
 
         // --- Practical 7: Demonstrate Annotations and Reflection ---
         demonstrateAnnotationsAndReflection();
+
+        // --- Practical 8: Demonstrate Exception Handling ---
+        demonstrateExceptionHandling();
 
         // --- Menu Loop ---
         Scanner scanner = new Scanner(System.in);
@@ -114,12 +121,20 @@ public class MiniBank {
             new SavingsAccount("Meera")
         };
 
-        accounts[0].deposit(2000);
-        boolean w1 = accounts[0].withdraw(3000);
-        boolean w2 = accounts[0].withdraw(10000);
+        boolean w1 = false;
+        boolean w2 = false;
+        try {
+            accounts[0].deposit(2000);
+            w1 = accounts[0].withdraw(3000);
+            w2 = accounts[0].withdraw(10000);
+        } catch (BankException e) {
+            w2 = false;
+        }
 
-        accounts[1].deposit(1500);
-        accounts[2].deposit(800);
+        try {
+            accounts[1].deposit(1500);
+            accounts[2].deposit(800);
+        } catch (BankException ignored) {}
 
         System.out.println();
         for (Account a : accounts) {
@@ -225,18 +240,40 @@ public class MiniBank {
         }
 
         System.out.println("\nTesting subtype withdrawal rules:");
-        System.out.println("Savings withdraw 4000: " + accounts[0].withdraw(4000)
-                + " (New Balance: " + accounts[0].getBalance() + ")");
-        System.out.println("Savings withdraw 500:  " + accounts[0].withdraw(500)
-                + " (New Balance: " + accounts[0].getBalance() + ")");
+        try {
+            System.out.println("Savings withdraw 4000: " + accounts[0].withdraw(4000)
+                    + " (New Balance: " + accounts[0].getBalance() + ")");
+        } catch (BankException e) {
+            System.out.println("Savings withdraw 4000 caught: " + e.getMessage());
+        }
 
-        System.out.println("Current withdraw 5000: " + accounts[1].withdraw(5000)
-                + " (New Balance: " + accounts[1].getBalance() + ")");
-        System.out.println("Current withdraw 3000: " + accounts[1].withdraw(3000)
-                + " (New Balance: " + accounts[1].getBalance() + ")");
+        try {
+            System.out.println("Savings withdraw 500:  " + accounts[0].withdraw(500)
+                    + " (New Balance: " + accounts[0].getBalance() + ")");
+        } catch (BankException e) {
+            System.out.println("Savings withdraw 500 caught: " + e.getMessage());
+        }
 
-        System.out.println("FD withdraw 1000:      " + accounts[2].withdraw(1000)
-                + " (New Balance: " + accounts[2].getBalance() + ")");
+        try {
+            System.out.println("Current withdraw 5000: " + accounts[1].withdraw(5000)
+                    + " (New Balance: " + accounts[1].getBalance() + ")");
+        } catch (BankException e) {
+            System.out.println("Current withdraw 5000 caught: " + e.getMessage());
+        }
+
+        try {
+            System.out.println("Current withdraw 3000: " + accounts[1].withdraw(3000)
+                    + " (New Balance: " + accounts[1].getBalance() + ")");
+        } catch (BankException e) {
+            System.out.println("Current withdraw 3000 caught: " + e.getMessage());
+        }
+
+        try {
+            System.out.println("FD withdraw 1000:      " + accounts[2].withdraw(1000)
+                    + " (New Balance: " + accounts[2].getBalance() + ")");
+        } catch (BankException e) {
+            System.out.println("FD withdraw 1000 caught: " + e.getMessage());
+        }
 
         System.out.println("--- End of Practical 5 Demo ---");
     }
@@ -283,7 +320,6 @@ public class MiniBank {
         System.out.println();
         System.out.println("--- Practical 7: Annotations & Reflection Demo ---");
 
-        // 1. Account with invalid negative balance (-100)
         Account invalidAccount = new SavingsAccount("Riya", -100, 1000);
         String[] invalidErrors = AnnotationValidator.validate(invalidAccount);
         System.out.println("Validating account with balance -100:");
@@ -291,12 +327,10 @@ public class MiniBank {
             System.out.println("  Validation Error: " + err);
         }
 
-        // 2. Account with valid positive balance (5000)
         Account validAccount = new SavingsAccount("Riya", 5000, 1000);
         String[] validErrors = AnnotationValidator.validate(validAccount);
         System.out.println("Validating account with balance 5000: Errors count = " + validErrors.length);
 
-        // 3. Testing @MaxLength constraint on string field
         Account longNameAccount = new SavingsAccount("VeryLongOwnerNameExceedingTwentyCharacters", 5000, 1000);
         String[] maxLengthErrors = AnnotationValidator.validate(longNameAccount);
         System.out.println("Validating account with long owner name (>20 chars):");
@@ -305,5 +339,74 @@ public class MiniBank {
         }
 
         System.out.println("--- End of Practical 7 Demo ---");
+    }
+
+    /**
+     * Practical 8 demonstration: custom banking exceptions, shortfall, atomic transfer,
+     * try-catch-finally, try-with-resources.
+     */
+    private static void demonstrateExceptionHandling() {
+        System.out.println();
+        System.out.println("--- Practical 8: Exception Handling Demo (Milestone 1) ---");
+
+        Account acc = new SavingsAccount("Riya", 1000, 0);
+
+        // 1. Withdrawal exceeding balance throws InsufficientFundsException with shortfall
+        try {
+            System.out.println("Attempting withdraw(5000) from balance " + acc.getBalance() + "...");
+            acc.withdraw(5000);
+        } catch (InsufficientFundsException e) {
+            System.out.println("Withdrawal failed: short by " + e.getShortfall() + " (Balance: " + acc.getBalance() + ")");
+        } catch (BankException e) {
+            System.out.println("Generic bank failure: " + e.getMessage());
+        }
+
+        // 2. Non-positive amount throws InvalidAmountException
+        try {
+            System.out.println("Attempting deposit(-200)...");
+            acc.deposit(-200);
+        } catch (InvalidAmountException e) {
+            System.out.println("Caught InvalidAmountException: " + e.getMessage());
+        }
+
+        // 3. Safe inter-account transfer with try-catch-finally
+        Account source = new SavingsAccount("Riya", 5000, 0);
+        Account target = new SavingsAccount("Arjun", 2000, 0);
+        System.out.println("\nInitial: Source Rs. " + source.getBalance() + ", Target Rs. " + target.getBalance());
+
+        try {
+            System.out.println("Executing transfer(1500) from Source to Target...");
+            source.transfer(target, 1500);
+            System.out.println("Transfer successful!");
+        } catch (BankException e) {
+            System.out.println("Transfer failed: " + e.getMessage());
+        } finally {
+            System.out.println("Finally block executed. Current Balances: Source="
+                    + source.getBalance() + ", Target=" + target.getBalance());
+        }
+
+        // 4. Failed transfer keeps balances intact (atomic integrity)
+        try {
+            System.out.println("\nExecuting transfer(20000) exceeding Source balance...");
+            source.transfer(target, 20000);
+        } catch (InsufficientFundsException e) {
+            System.out.println("Transfer rejected: short by " + e.getShortfall());
+        } catch (BankException e) {
+            System.out.println("Transfer error: " + e.getMessage());
+        } finally {
+            System.out.println("Integrity Check: Source=" + source.getBalance() + ", Target=" + target.getBalance());
+        }
+
+        // 5. Try-with-resources with AutoCloseable resource
+        System.out.println("\nDemonstrating try-with-resources:");
+        try (TransactionSession session = new TransactionSession("TX-8801")) {
+            System.out.println("Operating inside try-with-resources block...");
+            source.withdraw(500);
+            System.out.println("Withdrawn Rs. 500 in session " + session.getSessionId());
+        } catch (BankException e) {
+            System.out.println("Session error: " + e.getMessage());
+        }
+
+        System.out.println("--- End of Practical 8 Demo ---");
     }
 }

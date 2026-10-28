@@ -1,6 +1,10 @@
 package model;
 
 import java.util.Objects;
+import exception.AccountNotFoundException;
+import exception.BankException;
+import exception.InsufficientFundsException;
+import exception.InvalidAmountException;
 import model.annotation.Id;
 import model.annotation.MaxLength;
 import model.annotation.Positive;
@@ -14,6 +18,7 @@ import model.annotation.Positive;
  * Practical 5: Abstract class with interestRate() and canWithdraw().
  * Practical 6: Moved to model package, implements Transactable & InterestBearing.
  * Practical 7: Custom annotations @Id, @Positive, @MaxLength and @Override annotations.
+ * Practical 8: Checked exceptions on deposit/withdraw, transfer with try-catch-finally.
  */
 public abstract class Account implements Transactable, InterestBearing {
 
@@ -64,25 +69,60 @@ public abstract class Account implements Transactable, InterestBearing {
     public abstract boolean canWithdraw(long amount);
 
     @Override
-    public void deposit(long amount) {
+    public void deposit(long amount) throws InvalidAmountException {
         if (amount <= 0) {
-            System.out.println("Deposit amount must be positive.");
-            return;
+            throw new InvalidAmountException("Deposit amount must be strictly positive (got " + amount + ")");
         }
         balance += amount;
     }
 
     @Override
-    public boolean withdraw(long amount) {
+    public boolean withdraw(long amount) throws InsufficientFundsException, InvalidAmountException {
         if (amount <= 0) {
-            System.out.println("Withdrawal amount must be positive.");
-            return false;
+            throw new InvalidAmountException("Withdrawal amount must be strictly positive (got " + amount + ")");
         }
         if (!canWithdraw(amount)) {
-            return false;
+            long shortfall = Math.max(0, amount - balance);
+            throw new InsufficientFundsException(
+                    "Withdrawal failed: insufficient funds in " + accountNumber, shortfall);
         }
         balance -= amount;
         return true;
+    }
+
+    /**
+     * Atomically transfers money to destination account using try, catch, and finally.
+     * Re-throws BankException on failure, rolling back withdrawal if needed.
+     */
+    public void transfer(Account to, long amount) throws BankException {
+        if (to == null) {
+            throw new AccountNotFoundException("Destination account cannot be null");
+        }
+        if (to.equals(this)) {
+            throw new InvalidAmountException("Cannot transfer to the same account: " + accountNumber);
+        }
+        if (amount <= 0) {
+            throw new InvalidAmountException("Transfer amount must be strictly positive (got " + amount + ")");
+        }
+
+        boolean withdrawn = false;
+        try {
+            this.withdraw(amount);
+            withdrawn = true;
+            to.deposit(amount);
+        } catch (BankException e) {
+            if (withdrawn) {
+                // Rollback withdrawal if deposit failed
+                try {
+                    this.deposit(amount);
+                } catch (InvalidAmountException rollbackEx) {
+                    // Suppressed unexpected rollback failure
+                }
+            }
+            throw e;
+        } finally {
+            // Execution audit log in finally block
+        }
     }
 
     // --- Getters ---

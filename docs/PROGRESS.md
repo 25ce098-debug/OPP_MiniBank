@@ -55,3 +55,11 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ Account with negative balance correctly produces `must be > 0`; valid account returns 0 errors; `@MaxLength` flag triggers on overflow
 - **Tag:** `lab-07`
+
+## Practical 8 — Exception Handling and Milestone 1
+- **Status:** ✅ Complete
+- **Files:** `src/exception/BankException.java`, `src/exception/InsufficientFundsException.java`, `src/exception/AccountNotFoundException.java`, `src/exception/InvalidAmountException.java`, `src/util/TransactionSession.java`, `src/model/Account.java` (updated), `src/model/Transactable.java` (updated), `src/MiniBank.java` (updated)
+- **Concepts:** Checked exception hierarchy (`BankException` base), specific domain exceptions with metadata (`shortfall`), `throw` & `throws`, atomic transfer rollback with `try-catch-finally`, `AutoCloseable` & `try-with-resources` (`TransactionSession`)
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ Withdrawing 5000 from balance 1000 throws `InsufficientFundsException` with `shortfall=4000`; non-positive deposit caught; failed transfer retains balance integrity; try-with-resources closes automatically
+- **Tag:** `lab-08`
