@@ -103,3 +103,12 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ `Repository<Account>` performs CRUD; `@Id` retrieved dynamically from superclass `Account`; `Repository<Customer>` works identically; bounded `average()` calculates numeric means across multiple types
 - **Tag:** `lab-13`
+
+## Practical 14 — Integration, Testing and Milestone 2
+- **Status:** ✅ Complete
+- **Files:** `src/model/annotation/Audit.java`, `src/service/BankService.java`, `src/model/MenuOption.java`, `src/MiniBank.java`, `test/MiniBankTest.java`, `lib/junit-platform-console-standalone-1.10.2.jar`
+- **Concepts:** Full end-to-end integration of all OOP concepts, `@Audit` custom annotation for reflective method tracking, multi-service orchestration (`Repository<T>`, `Validator`, `BankException` hierarchy, `TransactionProcessor`, `StatePersister`, `TransactionLog`, `ReportGenerator`), JUnit 5 unit testing (`@Test`, `assertEquals`, `assertThrows`, `assertTrue`), interactive console banking workflow, persistence across restarts, runnable JAR packaging
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ All 5 JUnit 5 tests passed (`testDeposit`, `testWithdrawInsufficientFundsThrowsException`, `testAtomicTransferRollback`, `testValidationRejection`, `testGenericRepositoryCrud`); interactive menu demonstrated full lifecycle (Open Account, Deposit, Withdraw, Statement, List Accounts, Batch Processing, EOD Report, Save/Exit)
+- **Tag:** `lab-14`
+

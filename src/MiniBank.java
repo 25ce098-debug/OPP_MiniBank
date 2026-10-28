@@ -13,7 +13,8 @@ import exception.*;
 import static util.Validator.*;
 
 /**
- * MiniBank — the main console banking application.
+ * MiniBank — the complete Java console banking application.
+ *
  * Practical 1: Menu shell with enum, record, switch expression.
  * Practical 2: Customer and Account classes with encapsulation.
  * Practical 3: Object methods (toString, equals, hashCode), nested Address, clone.
@@ -32,10 +33,14 @@ import static util.Validator.*;
  *               Comparator sortedByBalance descending, Comparable<Account>, ConcurrentHashMap).
  * Practical 13: Generic Repository<T> with reflection-based @Id key lookup,
  *               @SafeVarargs saveAll, and bounded generic method <N extends Number> average.
+ * Practical 14: Complete MiniBank integration with BankService, interactive menu wiring,
+ *               load on startup and save on exit, batch processing, and EOD reporting.
  *
  * @author Bhavy Pan (25CE098)
  */
 public class MiniBank {
+
+    private static final BankService bankService = new BankService();
 
     public static void main(String[] args) {
         // Bank information header
@@ -45,56 +50,39 @@ public class MiniBank {
         System.out.println("  Branch : " + bank.branch());
         System.out.println("==========================================");
 
-        // --- Practical 2: Demonstrate Customer and Account ---
+        // Load saved state on start-up (Practical 11 / Practical 14)
+        int loadedCount = bankService.loadState();
+        if (loadedCount > 0) {
+            System.out.println("[Startup] Loaded " + loadedCount + " saved accounts from storage.");
+        }
+
+        // Run practical demonstration suite
         demonstrateAccountsAndCustomers();
-
-        // --- Practical 3: Demonstrate Object Methods ---
         demonstrateObjectMethods();
-
-        // --- Practical 4: Demonstrate Validation and Parsing ---
         demonstrateValidatorsAndParsing();
-
-        // --- Practical 5: Demonstrate Inheritance and Polymorphism ---
         demonstrateInheritanceAndPolymorphism();
-
-        // --- Practical 6: Demonstrate Interfaces, Lambdas, and Packages ---
         demonstrateInterfacesAndLambdas();
-
-        // --- Practical 7: Demonstrate Annotations and Reflection ---
         demonstrateAnnotationsAndReflection();
-
-        // --- Practical 8: Demonstrate Exception Handling ---
         demonstrateExceptionHandling();
-
-        // --- Practical 9: Demonstrate Multithreading and Synchronization ---
         demonstrateMultithreadingAndSynchronization();
-
-        // --- Practical 10: Demonstrate Transaction Processing and Deadlock Prevention ---
         demonstrateTransactionProcessingAndDeadlock();
-
-        // --- Practical 11: Demonstrate Persistence, Logs and Reports ---
         demonstratePersistenceAndReports();
-
-        // --- Practical 12: Demonstrate Collections and Sorting ---
         demonstrateCollectionsAndSorting();
-
-        // --- Practical 13: Demonstrate Generics and Generic Repository ---
         demonstrateGenericsAndRepository();
 
-        // --- Menu Loop ---
+        // --- Interactive Menu Loop connected to BankService ---
         Scanner scanner = new Scanner(System.in);
         MenuOption[] options = MenuOption.values();
         boolean running = true;
 
         while (running) {
             System.out.println();
-            System.out.println("--- Main Menu ---");
+            System.out.println("========== MiniBank Operations Menu ==========");
             for (int i = 0; i < options.length; i++) {
                 System.out.println("  " + (i + 1) + ". " + options[i].label());
             }
             System.out.print("Enter your choice (1-" + options.length + "): ");
 
-            // Read and validate input
             String input = scanner.nextLine().trim();
             int choice;
             try {
@@ -111,30 +99,179 @@ public class MiniBank {
 
             MenuOption selected = options[choice - 1];
 
-            // Switch expression maps the selected option to an action
-            String result = switch (selected) {
-                case OPEN_ACCOUNT -> "Open Account — to be implemented in a later lab.";
-                case DEPOSIT      -> "Deposit — to be implemented in a later lab.";
-                case WITHDRAW     -> "Withdraw — to be implemented in a later lab.";
-                case TRANSFER     -> "Transfer — to be implemented in a later lab.";
-                case EXIT         -> null; // signals exit
-            };
-
-            if (result == null) {
-                running = false;
-            } else {
-                System.out.println(result);
+            // Practical 14: Menu options wired directly to BankService operations
+            switch (selected) {
+                case OPEN_ACCOUNT -> handleOpenAccount(scanner);
+                case DEPOSIT -> handleDeposit(scanner);
+                case WITHDRAW -> handleWithdraw(scanner);
+                case TRANSFER -> handleTransfer(scanner);
+                case STATEMENT -> handleStatement(scanner);
+                case LIST_ACCOUNTS -> handleListAccounts();
+                case BATCH_PROCESS -> handleBatchProcess();
+                case REPORT -> handleReport();
+                case EXIT -> {
+                    try {
+                        bankService.saveState();
+                        System.out.println("[Shutdown] All account data saved to disk.");
+                    } catch (IOException e) {
+                        System.err.println("Error saving accounts on exit: " + e.getMessage());
+                    }
+                    running = false;
+                }
             }
         }
 
         System.out.println();
-        System.out.println("Thank you for using " + bank.name() + ". Goodbye!");
+        System.out.println("Thank you for banking with " + bank.name() + ". Goodbye!");
         scanner.close();
     }
 
-    /**
-     * Practical 2 demonstration: creates accounts, performs deposits/withdrawals.
-     */
+    private static void handleOpenAccount(Scanner scanner) {
+        System.out.print("Enter Account Type (Savings / Current / Fixed): ");
+        String type = scanner.nextLine().trim();
+
+        System.out.print("Enter Customer Name: ");
+        String name = scanner.nextLine().trim();
+
+        System.out.print("Enter Opening Balance (Rs): ");
+        long balance;
+        try {
+            balance = Long.parseLong(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: Balance must be a valid whole number.");
+            return;
+        }
+
+        long extra = 0;
+        if ("CURRENT".equalsIgnoreCase(type)) {
+            System.out.print("Enter Overdraft Limit (Rs, default 5000): ");
+            String extraStr = scanner.nextLine().trim();
+            extra = extraStr.isEmpty() ? 5000 : Long.parseLong(extraStr);
+        } else if ("SAVINGS".equalsIgnoreCase(type) || type.isEmpty()) {
+            System.out.print("Enter Minimum Balance (Rs, default 1000): ");
+            String extraStr = scanner.nextLine().trim();
+            extra = extraStr.isEmpty() ? 1000 : Long.parseLong(extraStr);
+        }
+
+        try {
+            Account acc = bankService.openAccount(type, name, balance, extra);
+            System.out.println("Account opened successfully! Account Number: " + acc.getAccountNumber());
+            System.out.println("Details: " + acc);
+        } catch (BankException e) {
+            System.out.println("Error opening account: " + e.getMessage());
+        }
+    }
+
+    private static void handleDeposit(Scanner scanner) {
+        System.out.print("Enter Account Number: ");
+        String accNum = scanner.nextLine().trim();
+        System.out.print("Enter Deposit Amount (Rs): ");
+        try {
+            long amount = Long.parseLong(scanner.nextLine().trim());
+            bankService.deposit(accNum, amount);
+            System.out.println("Successfully deposited Rs. " + amount + " into " + accNum.toUpperCase());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: Amount must be a valid whole number.");
+        } catch (BankException e) {
+            System.out.println("Deposit failed: " + e.getMessage());
+        }
+    }
+
+    private static void handleWithdraw(Scanner scanner) {
+        System.out.print("Enter Account Number: ");
+        String accNum = scanner.nextLine().trim();
+        System.out.print("Enter Withdrawal Amount (Rs): ");
+        try {
+            long amount = Long.parseLong(scanner.nextLine().trim());
+            bankService.withdraw(accNum, amount);
+            System.out.println("Successfully withdrew Rs. " + amount + " from " + accNum.toUpperCase());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: Amount must be a valid whole number.");
+        } catch (InsufficientFundsException e) {
+            System.out.println("Withdrawal rejected: Short by Rs. " + e.getShortfall());
+        } catch (BankException e) {
+            System.out.println("Withdrawal failed: " + e.getMessage());
+        }
+    }
+
+    private static void handleTransfer(Scanner scanner) {
+        System.out.print("Enter Source Account Number: ");
+        String from = scanner.nextLine().trim();
+        System.out.print("Enter Destination Account Number: ");
+        String to = scanner.nextLine().trim();
+        System.out.print("Enter Transfer Amount (Rs): ");
+        try {
+            long amount = Long.parseLong(scanner.nextLine().trim());
+            bankService.transfer(from, to, amount);
+            System.out.println("Successfully transferred Rs. " + amount + " from "
+                    + from.toUpperCase() + " to " + to.toUpperCase());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: Amount must be a valid whole number.");
+        } catch (InsufficientFundsException e) {
+            System.out.println("Transfer rejected: Short by Rs. " + e.getShortfall());
+        } catch (BankException e) {
+            System.out.println("Transfer failed: " + e.getMessage());
+        }
+    }
+
+    private static void handleStatement(Scanner scanner) {
+        System.out.print("Enter Account Number: ");
+        String accNum = scanner.nextLine().trim();
+        try {
+            String stmt = bankService.statement(accNum);
+            System.out.println(stmt);
+        } catch (BankException e) {
+            System.out.println("Statement lookup error: " + e.getMessage());
+        }
+    }
+
+    private static void handleListAccounts() {
+        List<Account> accounts = bankService.listAccounts();
+        if (accounts.isEmpty()) {
+            System.out.println("No accounts currently registered.");
+            return;
+        }
+        System.out.println("--- Registered Accounts (" + accounts.size() + ") ---");
+        for (Account a : accounts) {
+            System.out.println("  " + a);
+        }
+    }
+
+    private static void handleBatchProcess() {
+        System.out.println("Submitting transaction batch to 4-thread pool...");
+        List<Account> accounts = bankService.listAccounts();
+        if (accounts.isEmpty()) {
+            System.out.println("No accounts available for batch processing. Open an account first.");
+            return;
+        }
+        Account target = accounts.get(0);
+        List<Runnable> tasks = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            tasks.add(() -> {
+                try {
+                    target.deposit(50);
+                } catch (BankException ignored) {}
+            });
+        }
+        bankService.processBatch(tasks);
+        System.out.println("Batch processing completed. Current balance of " + target.getAccountNumber()
+                + " = Rs. " + target.getBalance());
+    }
+
+    private static void handleReport() {
+        try {
+            Path reportPath = Path.of("logs/eod_report.txt");
+            String report = bankService.generateReport(reportPath);
+            System.out.println(report);
+        } catch (IOException e) {
+            System.out.println("Error generating report: " + e.getMessage());
+        }
+    }
+
+    // =========================================================================
+    // Progressive Lab Verification Demos (Practicals 2 - 13)
+    // =========================================================================
+
     private static void demonstrateAccountsAndCustomers() {
         System.out.println();
         System.out.println("--- Practical 2: Account & Customer Demo ---");
@@ -173,9 +310,6 @@ public class MiniBank {
         System.out.println("--- End of Practical 2 Demo ---");
     }
 
-    /**
-     * Practical 3 demonstration: toString, equals/hashCode, nested Address, clone.
-     */
     private static void demonstrateObjectMethods() {
         System.out.println();
         System.out.println("--- Practical 3: Object Methods Demo ---");
@@ -206,9 +340,6 @@ public class MiniBank {
         System.out.println("--- End of Practical 3 Demo ---");
     }
 
-    /**
-     * Practical 4 demonstration: static import validator, command parsing, statement formatting.
-     */
     private static void demonstrateValidatorsAndParsing() {
         System.out.println();
         System.out.println("--- Practical 4: Validators & Parsing Demo ---");
@@ -240,9 +371,6 @@ public class MiniBank {
         System.out.println("--- End of Practical 4 Demo ---");
     }
 
-    /**
-     * Practical 5 demonstration: inheritance, runtime polymorphism, pattern matching instanceof.
-     */
     private static void demonstrateInheritanceAndPolymorphism() {
         System.out.println();
         System.out.println("--- Practical 5: Inheritance & Polymorphism Demo ---");
@@ -305,9 +433,6 @@ public class MiniBank {
         System.out.println("--- End of Practical 5 Demo ---");
     }
 
-    /**
-     * Practical 6 demonstration: interfaces, default methods, anonymous class vs lambda, marker interface.
-     */
     private static void demonstrateInterfacesAndLambdas() {
         System.out.println();
         System.out.println("--- Practical 6: Interfaces, Lambdas & Packages Demo ---");
@@ -340,9 +465,6 @@ public class MiniBank {
         System.out.println("--- End of Practical 6 Demo ---");
     }
 
-    /**
-     * Practical 7 demonstration: custom annotations (@Id, @Positive, @MaxLength) and reflection validation.
-     */
     private static void demonstrateAnnotationsAndReflection() {
         System.out.println();
         System.out.println("--- Practical 7: Annotations & Reflection Demo ---");
@@ -368,10 +490,6 @@ public class MiniBank {
         System.out.println("--- End of Practical 7 Demo ---");
     }
 
-    /**
-     * Practical 8 demonstration: custom banking exceptions, shortfall, atomic transfer,
-     * try-catch-finally, try-with-resources.
-     */
     private static void demonstrateExceptionHandling() {
         System.out.println();
         System.out.println("--- Practical 8: Exception Handling Demo (Milestone 1) ---");
@@ -432,9 +550,6 @@ public class MiniBank {
         System.out.println("--- End of Practical 8 Demo ---");
     }
 
-    /**
-     * Practical 9 demonstration: multithreading, race condition vs synchronized fix.
-     */
     private static void demonstrateMultithreadingAndSynchronization() {
         System.out.println();
         System.out.println("--- Practical 9: Multithreading & Synchronization Demo ---");
@@ -493,9 +608,6 @@ public class MiniBank {
         System.out.println("--- End of Practical 9 Demo ---");
     }
 
-    /**
-     * Practical 10 demonstration: TransactionProcessor, producer-consumer buffer, deadlock prevention.
-     */
     private static void demonstrateTransactionProcessingAndDeadlock() {
         System.out.println();
         System.out.println("--- Practical 10: Transaction Processor & Deadlock Demo ---");
@@ -591,9 +703,6 @@ public class MiniBank {
         System.out.println("--- End of Practical 10 Demo ---");
     }
 
-    /**
-     * Practical 11 demonstration: StatePersister, TransactionLog, and ReportGenerator.
-     */
     private static void demonstratePersistenceAndReports() {
         System.out.println();
         System.out.println("--- Practical 11: Persistence, Logs & Reports Demo ---");
@@ -648,9 +757,6 @@ public class MiniBank {
         System.out.println("--- End of Practical 11 Demo ---");
     }
 
-    /**
-     * Practical 12 demonstration: Collections Framework.
-     */
     private static void demonstrateCollectionsAndSorting() {
         System.out.println();
         System.out.println("--- Practical 12: Collections Framework Demo (Milestone 2) ---");
@@ -692,36 +798,27 @@ public class MiniBank {
         System.out.println("--- End of Practical 12 Demo ---");
     }
 
-    /**
-     * Practical 13 demonstration: Generic Repository<T> using reflection on @Id,
-     * @SafeVarargs saveAll, bounded type parameter average method, and reuse with Customer.
-     */
     private static void demonstrateGenericsAndRepository() {
         System.out.println();
         System.out.println("--- Practical 13: Generics & Generic Repository Demo ---");
 
-        // 1. Repository<Account> storing accounts via reflective @Id (from superclass Account)
         Repository<Account> accountRepo = new Repository<>();
         Account a1 = new SavingsAccount("Riya", 5000, 1000);
         Account a2 = new CurrentAccount("Arjun", 2000, 5000);
         Account a3 = new FixedDepositAccount("Meera", 10000);
 
-        // Save multiple using @SafeVarargs saveAll()
         accountRepo.saveAll(a1, a2, a3);
         System.out.println("Saved " + accountRepo.count() + " accounts into generic Repository<Account>.");
 
-        // Lookup by reflective ID
         System.out.println("\nRepository findById(" + a2.getAccountNumber() + "):");
         Account fetched = accountRepo.findById(a2.getAccountNumber());
         System.out.println("  Found: " + fetched);
 
-        // Fetch all
         System.out.println("\nRepository findAll():");
         for (Account a : accountRepo.findAll()) {
             System.out.println("  " + a);
         }
 
-        // 2. Reuse generic Repository<Customer> without modifying Repository class
         System.out.println("\nReusing Repository<T> for Customer objects:");
         Repository<Customer> customerRepo = new Repository<>();
         Customer c1 = new Customer("Riya", "riya@example.com", "9876543210");
@@ -732,7 +829,6 @@ public class MiniBank {
         Customer foundCustomer = customerRepo.findById(c1.getCustomerId());
         System.out.println("  Found Customer: " + foundCustomer);
 
-        // 3. Generic bounded method: <N extends Number> average(N[] values)
         Long[] accountBalances = { a1.getBalance(), a2.getBalance(), a3.getBalance() };
         double avgBalance = Repository.average(accountBalances);
         System.out.println("\nBounded Generic average() of balances: Rs. " + String.format("%.2f", avgBalance));

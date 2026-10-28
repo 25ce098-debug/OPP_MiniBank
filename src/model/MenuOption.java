@@ -1,13 +1,19 @@
 package model;
 
 /**
- * MenuOption — the fixed set of actions MiniBank offers.
+ * MenuOption — the actions MiniBank offers.
+ * Practical 1: OPEN_ACCOUNT, DEPOSIT, WITHDRAW, TRANSFER, EXIT.
+ * Practical 14: STATEMENT, LIST_ACCOUNTS, BATCH_PROCESS, REPORT.
  */
 public enum MenuOption {
     OPEN_ACCOUNT,
     DEPOSIT,
     WITHDRAW,
     TRANSFER,
+    STATEMENT,
+    LIST_ACCOUNTS,
+    BATCH_PROCESS,
+    REPORT,
     EXIT;
 
     public String label() {
