@@ -19,6 +19,8 @@ import static util.Validator.*;
  * Practical 7: Custom annotations (@Id, @Positive, @MaxLength) and reflection validation.
  * Practical 8: Custom exception hierarchy, atomic transfers, try-catch-finally, try-with-resources.
  * Practical 9: Multithreading, Runnable workers, race conditions, method synchronization.
+ * Practical 10: Transaction processor (Executors pool), producer-consumer buffer (wait/notify),
+ *               deadlock simulation and deadlock prevention via consistent lock ordering.
  *
  * @author Bhavy Pan (25CE098)
  */
@@ -55,6 +57,9 @@ public class MiniBank {
 
         // --- Practical 9: Demonstrate Multithreading and Synchronization ---
         demonstrateMultithreadingAndSynchronization();
+
+        // --- Practical 10: Demonstrate Transaction Processing and Deadlock Prevention ---
+        demonstrateTransactionProcessingAndDeadlock();
 
         // --- Menu Loop ---
         Scanner scanner = new Scanner(System.in);
@@ -408,8 +413,7 @@ public class MiniBank {
     }
 
     /**
-     * Practical 9 demonstration: multithreading, race condition vs synchronized fix,
-     * thread names, and thread lifecycle observation.
+     * Practical 9 demonstration: multithreading, race condition vs synchronized fix.
      */
     private static void demonstrateMultithreadingAndSynchronization() {
         System.out.println();
@@ -418,9 +422,9 @@ public class MiniBank {
         int threadCount = 10;
         int depositsPerThread = 1000;
         long amountPerDeposit = 1;
-        long expectedTotal = threadCount * depositsPerThread * amountPerDeposit; // 10000
+        long expectedTotal = threadCount * depositsPerThread * amountPerDeposit;
 
-        // 1. Unsynchronized Race Condition Demonstration
+        // 1. Unsynchronized Race Condition
         System.out.println("Phase 1: Demonstrating Unsynchronized Race Condition on UnsafeAccount...");
         UnsafeAccount unsafeAccount = new UnsafeAccount(0);
         Thread[] unsafeThreads = new Thread[threadCount];
@@ -445,7 +449,7 @@ public class MiniBank {
         System.out.println("Actual Unsynchronized Balance: " + unsafeAccount.getBalance()
                 + " (Notice: data loss due to race condition!)");
 
-        // 2. Thread-Safe Synchronized Demonstration with AccountWorker
+        // 2. Synchronized Thread-Safety with AccountWorker
         System.out.println("\nPhase 2: Running 10 Concurrent AccountWorker Threads on Synchronized Account...");
         Account safeAccount = new SavingsAccount("Concurrent Test", 0, 0);
         Thread[] safeThreads = new Thread[threadCount];
@@ -453,7 +457,6 @@ public class MiniBank {
         for (int i = 0; i < threadCount; i++) {
             AccountWorker worker = new AccountWorker(safeAccount, depositsPerThread, amountPerDeposit);
             safeThreads[i] = new Thread(worker, "Safe-Worker-" + (i + 1));
-            System.out.println("Created: " + safeThreads[i].getName() + " | State: " + safeThreads[i].getState());
             safeThreads[i].start();
         }
 
@@ -465,11 +468,115 @@ public class MiniBank {
             }
         }
 
-        System.out.println("\nAll worker threads completed (State after join: " + safeThreads[0].getState() + ").");
         System.out.println("Expected Balance: " + expectedTotal);
         System.out.println("Actual Synchronized Balance: " + safeAccount.getBalance()
                 + " (Exact match every run — thread safe!)");
 
         System.out.println("--- End of Practical 9 Demo ---");
+    }
+
+    /**
+     * Practical 10 demonstration: TransactionProcessor (pool of 4), producer-consumer buffer (wait/notify),
+     * deadlock simulation and deadlock prevention with lock ordering.
+     */
+    private static void demonstrateTransactionProcessingAndDeadlock() {
+        System.out.println();
+        System.out.println("--- Practical 10: Transaction Processor & Deadlock Demo ---");
+
+        // 1. TransactionProcessor with 4 threads executing a batch of deposits/withdrawals
+        System.out.println("Phase 1: Batch Processing on Managed Thread Pool (size 4)...");
+        Account batchAccount = new SavingsAccount("Batch User", 5000, 0);
+        TransactionProcessor processor = new TransactionProcessor(4);
+
+        for (int i = 0; i < 20; i++) {
+            final int txNum = i + 1;
+            processor.submit(() -> {
+                try {
+                    if (txNum % 2 == 0) {
+                        batchAccount.deposit(100);
+                    } else {
+                        batchAccount.withdraw(50);
+                    }
+                } catch (BankException ignored) {}
+            });
+        }
+        processor.stop();
+        // 10 deposits of 100 (+1000), 10 withdrawals of 50 (-500) -> Net +500 => 5500
+        System.out.println("Batch execution finished. Account balance: Rs. " + batchAccount.getBalance()
+                + " (Expected: 5500)");
+
+        // 2. Producer-Consumer buffer using wait() and notifyAll()
+        System.out.println("\nPhase 2: Producer-Consumer Coordination with wait()/notify()...");
+        TransactionBuffer buffer = new TransactionBuffer(2); // capacity of 2
+        Thread producer = new Thread(() -> {
+            try {
+                for (int i = 1; i <= 4; i++) {
+                    String tx = "TX-BATCH-" + i;
+                    buffer.put(tx);
+                    System.out.println("  [Producer] Put into buffer: " + tx);
+                    Thread.sleep(40);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }, "Buffer-Producer");
+
+        Thread consumer = new Thread(() -> {
+            try {
+                for (int i = 1; i <= 4; i++) {
+                    String tx = buffer.take();
+                    System.out.println("  [Consumer] Took from buffer: " + tx);
+                    Thread.sleep(80);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }, "Buffer-Consumer");
+
+        consumer.start();
+        producer.start();
+
+        try {
+            producer.join();
+            consumer.join();
+        } catch (InterruptedException ignored) {}
+
+        // 3. Deadlock Demonstration and Prevention
+        System.out.println("\nPhase 3: Deadlock Demonstration and Lock-Ordering Prevention...");
+        Account accA = new SavingsAccount("AC0011", "Alice", 10000, 0);
+        Account accB = new SavingsAccount("AC0012", "Bob", 10000, 0);
+
+        // Safe isolated demonstration of opposite locking
+        DeadlockDemo.demonstrateOppositeLocking(accA, accB);
+
+        // Now demonstrate safe cross-transfer using consistent lock ordering (smaller account number first)
+        System.out.println("  [Safe Lock-Ordering Transfer] Transferring A -> B and B -> A concurrently...");
+        Thread tSafe1 = new Thread(() -> {
+            try {
+                DeadlockDemo.safeTransfer(accA, accB, 2000);
+            } catch (BankException e) {
+                System.out.println("Safe transfer 1 error: " + e.getMessage());
+            }
+        });
+        Thread tSafe2 = new Thread(() -> {
+            try {
+                DeadlockDemo.safeTransfer(accB, accA, 1000);
+            } catch (BankException e) {
+                System.out.println("Safe transfer 2 error: " + e.getMessage());
+            }
+        });
+
+        tSafe1.start();
+        tSafe2.start();
+
+        try {
+            tSafe1.join();
+            tSafe2.join();
+        } catch (InterruptedException ignored) {}
+
+        System.out.println("  Safe transfers completed! Final balances: Alice="
+                + accA.getBalance() + " (Expected 9000), Bob=" + accB.getBalance() + " (Expected 11000)");
+
+        System.out.println("--- End of Practical 10 Demo ---");
     }
 }

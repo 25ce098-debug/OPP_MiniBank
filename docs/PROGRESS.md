@@ -71,3 +71,11 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ Unsafe account demonstrates data loss (balance ~2590 vs 10000); synchronized account produces exact 10000 across 10 concurrent threads running 1000 iterations each
 - **Tag:** `lab-09`
+
+## Practical 10 — Transaction Processing and Deadlock
+- **Status:** ✅ Complete
+- **Files:** `src/service/TransactionProcessor.java`, `src/service/TransactionBuffer.java`, `src/service/DeadlockDemo.java`, `src/MiniBank.java` (updated)
+- **Concepts:** `ExecutorService` fixed thread pool (size 4), batch task submission, graceful `shutdown()` and `awaitTermination()`, inter-thread communication via `wait()` and `notifyAll()` in bounded array buffer, circular wait deadlock demonstration, deadlock prevention via global lock ordering on `accountNumber`
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ Thread pool completes batch to Rs. 5500; Producer-Consumer processes items in lockstep; opposite-order locking deadlock isolated and verified; consistent lock ordering transfers concurrently without deadlock (Alice=9000, Bob=11000)
+- **Tag:** `lab-10`
