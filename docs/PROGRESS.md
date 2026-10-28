@@ -7,3 +7,11 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ Menu loops correctly, placeholders display, invalid input handled, EXIT works
 - **Tag:** `lab-01`
+
+## Practical 2 — Customer and Account Classes
+- **Status:** ✅ Complete
+- **Files:** `src/Customer.java`, `src/Account.java`, `src/MiniBank.java` (updated)
+- **Concepts:** Encapsulation, private fields, public getters, static counter, constructor chaining with `this()`, `final` accountNumber
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ Deposit adds to balance, withdraw returns true/false correctly, balance cannot be set from outside
+- **Tag:** `lab-02`
