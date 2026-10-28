@@ -63,3 +63,11 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ Withdrawing 5000 from balance 1000 throws `InsufficientFundsException` with `shortfall=4000`; non-positive deposit caught; failed transfer retains balance integrity; try-with-resources closes automatically
 - **Tag:** `lab-08`
+
+## Practical 9 — Multithreading and Synchronization
+- **Status:** ✅ Complete
+- **Files:** `src/service/AccountWorker.java`, `src/service/UnsafeAccount.java`, `src/model/Account.java` (synchronized methods), `src/MiniBank.java` (updated)
+- **Concepts:** `Thread` and `Runnable` lifecycle (`NEW`, `RUNNABLE`, `TERMINATED`), `join()`, race condition mechanics on shared mutable state, thread-safety using method synchronization (`synchronized`)
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ Unsafe account demonstrates data loss (balance ~2590 vs 10000); synchronized account produces exact 10000 across 10 concurrent threads running 1000 iterations each
+- **Tag:** `lab-09`

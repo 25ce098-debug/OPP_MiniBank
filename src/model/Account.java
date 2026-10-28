@@ -19,6 +19,7 @@ import model.annotation.Positive;
  * Practical 6: Moved to model package, implements Transactable & InterestBearing.
  * Practical 7: Custom annotations @Id, @Positive, @MaxLength and @Override annotations.
  * Practical 8: Checked exceptions on deposit/withdraw, transfer with try-catch-finally.
+ * Practical 9: Synchronized methods for thread-safety during concurrent operations.
  */
 public abstract class Account implements Transactable, InterestBearing {
 
@@ -69,7 +70,7 @@ public abstract class Account implements Transactable, InterestBearing {
     public abstract boolean canWithdraw(long amount);
 
     @Override
-    public void deposit(long amount) throws InvalidAmountException {
+    public synchronized void deposit(long amount) throws InvalidAmountException {
         if (amount <= 0) {
             throw new InvalidAmountException("Deposit amount must be strictly positive (got " + amount + ")");
         }
@@ -77,7 +78,7 @@ public abstract class Account implements Transactable, InterestBearing {
     }
 
     @Override
-    public boolean withdraw(long amount) throws InsufficientFundsException, InvalidAmountException {
+    public synchronized boolean withdraw(long amount) throws InsufficientFundsException, InvalidAmountException {
         if (amount <= 0) {
             throw new InvalidAmountException("Withdrawal amount must be strictly positive (got " + amount + ")");
         }
@@ -131,7 +132,7 @@ public abstract class Account implements Transactable, InterestBearing {
     public String getOwnerName()     { return ownerName; }
 
     @Override
-    public long getBalance()         { return balance; }
+    public synchronized long getBalance() { return balance; }
 
     public boolean isActive()        { return active; }
 

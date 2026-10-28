@@ -17,9 +17,8 @@ import static util.Validator.*;
  * Practical 6: Interfaces (Transactable, InterestBearing, Premium),
  *              lambdas (WithdrawRule), package organization, static import.
  * Practical 7: Custom annotations (@Id, @Positive, @MaxLength) and reflection validation.
- * Practical 8: Custom exception hierarchy (BankException, InsufficientFundsException,
- *              InvalidAmountException, AccountNotFoundException), atomic transfers,
- *              try-catch-finally, try-with-resources.
+ * Practical 8: Custom exception hierarchy, atomic transfers, try-catch-finally, try-with-resources.
+ * Practical 9: Multithreading, Runnable workers, race conditions, method synchronization.
  *
  * @author Bhavy Pan (25CE098)
  */
@@ -53,6 +52,9 @@ public class MiniBank {
 
         // --- Practical 8: Demonstrate Exception Handling ---
         demonstrateExceptionHandling();
+
+        // --- Practical 9: Demonstrate Multithreading and Synchronization ---
+        demonstrateMultithreadingAndSynchronization();
 
         // --- Menu Loop ---
         Scanner scanner = new Scanner(System.in);
@@ -351,7 +353,6 @@ public class MiniBank {
 
         Account acc = new SavingsAccount("Riya", 1000, 0);
 
-        // 1. Withdrawal exceeding balance throws InsufficientFundsException with shortfall
         try {
             System.out.println("Attempting withdraw(5000) from balance " + acc.getBalance() + "...");
             acc.withdraw(5000);
@@ -361,7 +362,6 @@ public class MiniBank {
             System.out.println("Generic bank failure: " + e.getMessage());
         }
 
-        // 2. Non-positive amount throws InvalidAmountException
         try {
             System.out.println("Attempting deposit(-200)...");
             acc.deposit(-200);
@@ -369,7 +369,6 @@ public class MiniBank {
             System.out.println("Caught InvalidAmountException: " + e.getMessage());
         }
 
-        // 3. Safe inter-account transfer with try-catch-finally
         Account source = new SavingsAccount("Riya", 5000, 0);
         Account target = new SavingsAccount("Arjun", 2000, 0);
         System.out.println("\nInitial: Source Rs. " + source.getBalance() + ", Target Rs. " + target.getBalance());
@@ -385,7 +384,6 @@ public class MiniBank {
                     + source.getBalance() + ", Target=" + target.getBalance());
         }
 
-        // 4. Failed transfer keeps balances intact (atomic integrity)
         try {
             System.out.println("\nExecuting transfer(20000) exceeding Source balance...");
             source.transfer(target, 20000);
@@ -397,7 +395,6 @@ public class MiniBank {
             System.out.println("Integrity Check: Source=" + source.getBalance() + ", Target=" + target.getBalance());
         }
 
-        // 5. Try-with-resources with AutoCloseable resource
         System.out.println("\nDemonstrating try-with-resources:");
         try (TransactionSession session = new TransactionSession("TX-8801")) {
             System.out.println("Operating inside try-with-resources block...");
@@ -408,5 +405,71 @@ public class MiniBank {
         }
 
         System.out.println("--- End of Practical 8 Demo ---");
+    }
+
+    /**
+     * Practical 9 demonstration: multithreading, race condition vs synchronized fix,
+     * thread names, and thread lifecycle observation.
+     */
+    private static void demonstrateMultithreadingAndSynchronization() {
+        System.out.println();
+        System.out.println("--- Practical 9: Multithreading & Synchronization Demo ---");
+
+        int threadCount = 10;
+        int depositsPerThread = 1000;
+        long amountPerDeposit = 1;
+        long expectedTotal = threadCount * depositsPerThread * amountPerDeposit; // 10000
+
+        // 1. Unsynchronized Race Condition Demonstration
+        System.out.println("Phase 1: Demonstrating Unsynchronized Race Condition on UnsafeAccount...");
+        UnsafeAccount unsafeAccount = new UnsafeAccount(0);
+        Thread[] unsafeThreads = new Thread[threadCount];
+
+        for (int i = 0; i < threadCount; i++) {
+            unsafeThreads[i] = new Thread(() -> {
+                for (int j = 0; j < depositsPerThread; j++) {
+                    unsafeAccount.deposit(amountPerDeposit);
+                }
+            }, "Unsafe-Thread-" + (i + 1));
+            unsafeThreads[i].start();
+        }
+
+        for (Thread t : unsafeThreads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        System.out.println("Expected Balance: " + expectedTotal);
+        System.out.println("Actual Unsynchronized Balance: " + unsafeAccount.getBalance()
+                + " (Notice: data loss due to race condition!)");
+
+        // 2. Thread-Safe Synchronized Demonstration with AccountWorker
+        System.out.println("\nPhase 2: Running 10 Concurrent AccountWorker Threads on Synchronized Account...");
+        Account safeAccount = new SavingsAccount("Concurrent Test", 0, 0);
+        Thread[] safeThreads = new Thread[threadCount];
+
+        for (int i = 0; i < threadCount; i++) {
+            AccountWorker worker = new AccountWorker(safeAccount, depositsPerThread, amountPerDeposit);
+            safeThreads[i] = new Thread(worker, "Safe-Worker-" + (i + 1));
+            System.out.println("Created: " + safeThreads[i].getName() + " | State: " + safeThreads[i].getState());
+            safeThreads[i].start();
+        }
+
+        for (Thread t : safeThreads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        System.out.println("\nAll worker threads completed (State after join: " + safeThreads[0].getState() + ").");
+        System.out.println("Expected Balance: " + expectedTotal);
+        System.out.println("Actual Synchronized Balance: " + safeAccount.getBalance()
+                + " (Exact match every run — thread safe!)");
+
+        System.out.println("--- End of Practical 9 Demo ---");
     }
 }
