@@ -23,3 +23,11 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ toString readable, equals works by accountNumber, Address nested class, clone creates separate copy
 - **Tag:** `lab-03`
+
+## Practical 4 — Input Validation and Command Parsing
+- **Status:** ✅ Complete
+- **Files:** `src/Validator.java`, `src/TransactionType.java`, `src/Command.java`, `src/CommandParser.java`, `src/StatementFormatter.java`
+- **Concepts:** Compiled Pattern/regex, String.split(), StringBuilder, records
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ Validators return correct true/false, parser extracts command fields, invalid input throws exception
+- **Tag:** `lab-04`

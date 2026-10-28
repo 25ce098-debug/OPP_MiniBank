@@ -5,6 +5,7 @@ import java.util.Scanner;
  * Practical 1: Menu shell with enum, record, switch expression.
  * Practical 2: Customer and Account classes with encapsulation.
  * Practical 3: Object methods (toString, equals, hashCode), nested Address, clone.
+ * Practical 4: Input validation, command parsing, statement formatting.
  *
  * @author Bhavy Pan (25CE098)
  */
@@ -23,6 +24,9 @@ public class MiniBank {
 
         // --- Practical 3: Demonstrate Object Methods ---
         demonstrateObjectMethods();
+
+        // --- Practical 4: Demonstrate Validation and Parsing ---
+        demonstrateValidatorsAndParsing();
 
         // --- Menu Loop ---
         Scanner scanner = new Scanner(System.in);
@@ -149,5 +153,43 @@ public class MiniBank {
         System.out.println("Original name equals clone: " + c.getName().equals(cloned.getName()));
 
         System.out.println("--- End of Practical 3 Demo ---");
+    }
+
+    /**
+     * Practical 4 demonstration: validators, command parsing, statement formatting.
+     */
+    private static void demonstrateValidatorsAndParsing() {
+        System.out.println();
+        System.out.println("--- Practical 4: Validators & Parsing Demo ---");
+
+        // Validator tests
+        System.out.println("isValidMobile(\"9876543210\"): " + Validator.isValidMobile("9876543210"));
+        System.out.println("isValidMobile(\"12345\"):      " + Validator.isValidMobile("12345"));
+        System.out.println("isValidEmail(\"abc@xyz.com\"): " + Validator.isValidEmail("abc@xyz.com"));
+        System.out.println("isValidEmail(\"notanemail\"):  " + Validator.isValidEmail("notanemail"));
+        System.out.println("isValidPan(\"ABCDE1234F\"):   " + Validator.isValidPan("ABCDE1234F"));
+        System.out.println("isValidPan(\"12345\"):         " + Validator.isValidPan("12345"));
+        System.out.println("isValidIfsc(\"SBIN0001234\"): " + Validator.isValidIfsc("SBIN0001234"));
+        System.out.println("isValidIfsc(\"INVALID\"):      " + Validator.isValidIfsc("INVALID"));
+
+        // Command parsing
+        Command cmd = CommandParser.parse("DEPOSIT AC0001 500");
+        System.out.println("Parsed command: type=" + cmd.type()
+                + ", accountNumber=" + cmd.accountNumber()
+                + ", amount=" + cmd.amount());
+
+        // Try parsing an invalid command
+        try {
+            CommandParser.parse("INVALID");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Parse error (expected): " + e.getMessage());
+        }
+
+        // Statement formatting
+        Account acc = new Account("Riya", 7000);
+        System.out.println();
+        System.out.println(StatementFormatter.buildStatement(acc));
+
+        System.out.println("--- End of Practical 4 Demo ---");
     }
 }
