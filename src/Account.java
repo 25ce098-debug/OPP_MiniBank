@@ -1,12 +1,13 @@
 import java.util.Objects;
 
 /**
- * Account — represents a bank account with encapsulated balance.
+ * Account — represents an abstract bank account with encapsulated balance.
  * Balance can only change through deposit() and withdraw(), never directly.
  * Demonstrates encapsulation, static counter, constructor chaining.
  * Practical 3: toString, equals/hashCode based on accountNumber.
+ * Practical 5: abstract class with interestRate() and canWithdraw(amount).
  */
-public class Account {
+public abstract class Account {
 
     private static long accountCounter = 0;
 
@@ -36,6 +37,26 @@ public class Account {
     }
 
     /**
+     * Protected constructor to allow controlled creation (e.g., testing equality).
+     */
+    protected Account(String accountNumber, String ownerName, long openingBalance) {
+        this.accountNumber = accountNumber;
+        this.ownerName = ownerName;
+        this.balance = openingBalance;
+        this.active = true;
+    }
+
+    /**
+     * Abstract method returning annual interest rate percentage.
+     */
+    public abstract double interestRate();
+
+    /**
+     * Abstract method determining if a withdrawal amount is allowed by subtype rules.
+     */
+    public abstract boolean canWithdraw(long amount);
+
+    /**
      * Adds the given amount to the balance.
      * Rejects negative or zero amounts.
      */
@@ -48,7 +69,7 @@ public class Account {
     }
 
     /**
-     * Subtracts the given amount from the balance if sufficient funds exist.
+     * Subtracts the given amount from the balance if allowed by subtype rules.
      * @return true if withdrawal succeeded, false otherwise.
      */
     public boolean withdraw(long amount) {
@@ -56,8 +77,8 @@ public class Account {
             System.out.println("Withdrawal amount must be positive.");
             return false;
         }
-        if (amount > balance) {
-            return false; // insufficient funds
+        if (!canWithdraw(amount)) {
+            return false; // insufficient funds or subtype rule restriction
         }
         balance -= amount;
         return true;

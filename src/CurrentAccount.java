@@ -1,0 +1,46 @@
+/**
+ * CurrentAccount — account type with an overdraft facility and 0.0% interest.
+ * Extends Account. Allows balance to drop down to -overdraftLimit.
+ */
+public class CurrentAccount extends Account {
+
+    private long overdraftLimit;
+
+    public CurrentAccount(String ownerName, long openingBalance, long overdraftLimit) {
+        super(ownerName, openingBalance);
+        this.overdraftLimit = overdraftLimit;
+    }
+
+    public CurrentAccount(String ownerName, long openingBalance) {
+        this(ownerName, openingBalance, 5000);
+    }
+
+    public CurrentAccount(String ownerName) {
+        this(ownerName, 0, 5000);
+    }
+
+    public CurrentAccount(String accountNumber, String ownerName, long openingBalance, long overdraftLimit) {
+        super(accountNumber, ownerName, openingBalance);
+        this.overdraftLimit = overdraftLimit;
+    }
+
+    public long getOverdraftLimit() {
+        return overdraftLimit;
+    }
+
+    public void setOverdraftLimit(long overdraftLimit) {
+        this.overdraftLimit = overdraftLimit;
+    }
+
+    public double interestRate() {
+        return 0.0;
+    }
+
+    public boolean canWithdraw(long amount) {
+        return (getBalance() - amount) >= -overdraftLimit;
+    }
+
+    public String toString() {
+        return super.toString() + " | Current (Overdraft: " + overdraftLimit + ", Rate: " + interestRate() + "%)";
+    }
+}

@@ -6,6 +6,7 @@ import java.util.Scanner;
  * Practical 2: Customer and Account classes with encapsulation.
  * Practical 3: Object methods (toString, equals, hashCode), nested Address, clone.
  * Practical 4: Input validation, command parsing, statement formatting.
+ * Practical 5: Inheritance and polymorphism (Savings, Current, FixedDeposit).
  *
  * @author Bhavy Pan (25CE098)
  */
@@ -27,6 +28,9 @@ public class MiniBank {
 
         // --- Practical 4: Demonstrate Validation and Parsing ---
         demonstrateValidatorsAndParsing();
+
+        // --- Practical 5: Demonstrate Inheritance and Polymorphism ---
+        demonstrateInheritanceAndPolymorphism();
 
         // --- Menu Loop ---
         Scanner scanner = new Scanner(System.in);
@@ -93,9 +97,9 @@ public class MiniBank {
 
         // Create three accounts in an array
         Account[] accounts = {
-            new Account("Riya", 5000),
-            new Account("Arjun", 3000),
-            new Account("Meera")       // zero opening balance via chained constructor
+            new SavingsAccount("Riya", 5000, 1000),
+            new CurrentAccount("Arjun", 3000, 2000),
+            new SavingsAccount("Meera")       // zero opening balance via chained constructor
         };
 
         // Deposit and withdraw
@@ -125,14 +129,14 @@ public class MiniBank {
         System.out.println("--- Practical 3: Object Methods Demo ---");
 
         // toString
-        Account a1 = new Account("Riya", 4000);
+        Account a1 = new SavingsAccount("Riya", 4000, 1000);
         System.out.println("toString: " + a1);
 
-        // equals — we create two accounts and compare
-        // Since account numbers are auto-generated and unique, a1.equals(a1) is true
-        // but a different Account object will have a different number
-        Account a2 = new Account("Arjun", 2000);
+        // equals — distinct object with same account number tests equals()
+        Account a1Dup = new SavingsAccount(a1.getAccountNumber(), "Riya Dup", 4000, 1000);
+        Account a2 = new CurrentAccount("Arjun", 2000, 3000);
         System.out.println("a1.equals(a1): " + a1.equals(a1));
+        System.out.println("a1.equals(a1Dup) [same account number]: " + a1.equals(a1Dup));
         System.out.println("a1.equals(a2): " + a1.equals(a2));
 
         // instanceof check
@@ -186,10 +190,62 @@ public class MiniBank {
         }
 
         // Statement formatting
-        Account acc = new Account("Riya", 7000);
+        Account acc = new SavingsAccount("Riya", 7000, 1000);
         System.out.println();
         System.out.println(StatementFormatter.buildStatement(acc));
 
         System.out.println("--- End of Practical 4 Demo ---");
+    }
+
+    /**
+     * Practical 5 demonstration: inheritance, runtime polymorphism, pattern matching instanceof.
+     */
+    private static void demonstrateInheritanceAndPolymorphism() {
+        System.out.println();
+        System.out.println("--- Practical 5: Inheritance & Polymorphism Demo ---");
+
+        // Polymorphic array
+        Account[] accounts = {
+            new SavingsAccount("Riya", 5000, 1000),
+            new CurrentAccount("Arjun", 2000, 5000),
+            new FixedDepositAccount("Meera", 10000)
+        };
+
+        // Runtime polymorphism: interestRate() invoked dynamically per concrete subtype
+        for (Account a : accounts) {
+            System.out.println(a.getAccountNumber() + " | " + a.getOwnerName()
+                    + " | Interest Rate: " + a.interestRate() + "%");
+
+            // Pattern matching with instanceof
+            if (a instanceof SavingsAccount sa) {
+                System.out.println("   -> Subtype: SavingsAccount (Min Balance: Rs. " + sa.getMinBalance() + ")");
+            } else if (a instanceof CurrentAccount ca) {
+                System.out.println("   -> Subtype: CurrentAccount (Overdraft Limit: Rs. " + ca.getOverdraftLimit() + ")");
+            } else if (a instanceof FixedDepositAccount) {
+                System.out.println("   -> Subtype: FixedDepositAccount (Withdrawals Locked)");
+            }
+        }
+
+        // Subtype-specific withdrawal rule verification
+        System.out.println("\nTesting subtype withdrawal rules:");
+        // Savings: balance 5000, min 1000 -> withdraw 4000 ok
+        System.out.println("Savings withdraw 4000: " + accounts[0].withdraw(4000)
+                + " (New Balance: " + accounts[0].getBalance() + ")");
+        // Savings: balance 1000, min 1000 -> withdraw 500 fails (violates minBalance)
+        System.out.println("Savings withdraw 500:  " + accounts[0].withdraw(500)
+                + " (New Balance: " + accounts[0].getBalance() + ")");
+
+        // Current: balance 2000, overdraft 5000 -> withdraw 5000 ok (balance drops to -3000)
+        System.out.println("Current withdraw 5000: " + accounts[1].withdraw(5000)
+                + " (New Balance: " + accounts[1].getBalance() + ")");
+        // Current: balance -3000, overdraft 5000 -> withdraw 3000 fails (would exceed overdraft)
+        System.out.println("Current withdraw 3000: " + accounts[1].withdraw(3000)
+                + " (New Balance: " + accounts[1].getBalance() + ")");
+
+        // Fixed Deposit: withdrawals are locked
+        System.out.println("FD withdraw 1000:      " + accounts[2].withdraw(1000)
+                + " (New Balance: " + accounts[2].getBalance() + ")");
+
+        System.out.println("--- End of Practical 5 Demo ---");
     }
 }

@@ -18,3 +18,4 @@ public class StatementFormatter {
         return sb.toString();
     }
 }
+

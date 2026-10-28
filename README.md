@@ -28,3 +28,4 @@ java -cp out MiniBank
 ## Current Progress
 
 - [x] **Practical 1** — Project setup, menu shell with enum, record, switch expression
+

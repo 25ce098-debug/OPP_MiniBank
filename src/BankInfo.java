@@ -3,3 +3,4 @@
  * Records auto-generate constructor, accessors, equals, hashCode and toString.
  */
 public record BankInfo(String name, String branch) {}
+

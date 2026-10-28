@@ -31,3 +31,11 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ Validators return correct true/false, parser extracts command fields, invalid input throws exception
 - **Tag:** `lab-04`
+
+## Practical 5 — Inheritance and Polymorphism
+- **Status:** ✅ Complete
+- **Files:** `src/Account.java` (made abstract), `src/SavingsAccount.java`, `src/CurrentAccount.java`, `src/FixedDepositAccount.java`, `src/MiniBank.java` (updated)
+- **Concepts:** Abstract class, abstract methods (`interestRate()`, `canWithdraw()`), `super()` constructor chaining, subtype-specific withdrawal rules, runtime polymorphism, pattern matching with `instanceof`
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ Dynamic dispatch on `Account[]` returns 4.0%, 0.0%, 7.0%; subtype withdrawal rules verified (Savings min-balance check, Current overdraft, FD locked)
+- **Tag:** `lab-05`
