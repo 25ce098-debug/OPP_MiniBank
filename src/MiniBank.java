@@ -15,6 +15,7 @@ import static util.Validator.*;
  * Practical 5: Inheritance and polymorphism (Savings, Current, FixedDeposit).
  * Practical 6: Interfaces (Transactable, InterestBearing, Premium),
  *              lambdas (WithdrawRule), package organization, static import.
+ * Practical 7: Custom annotations (@Id, @Positive, @MaxLength) and reflection validation.
  *
  * @author Bhavy Pan (25CE098)
  */
@@ -42,6 +43,9 @@ public class MiniBank {
 
         // --- Practical 6: Demonstrate Interfaces, Lambdas, and Packages ---
         demonstrateInterfacesAndLambdas();
+
+        // --- Practical 7: Demonstrate Annotations and Reflection ---
+        demonstrateAnnotationsAndReflection();
 
         // --- Menu Loop ---
         Scanner scanner = new Scanner(System.in);
@@ -167,7 +171,6 @@ public class MiniBank {
         System.out.println();
         System.out.println("--- Practical 4: Validators & Parsing Demo ---");
 
-        // Static import allows calling isValidMobile, etc., directly without Validator. prefix
         System.out.println("isValidMobile(\"9876543210\"): " + isValidMobile("9876543210"));
         System.out.println("isValidMobile(\"12345\"):      " + isValidMobile("12345"));
         System.out.println("isValidEmail(\"abc@xyz.com\"): " + isValidEmail("abc@xyz.com"));
@@ -248,20 +251,16 @@ public class MiniBank {
         SavingsAccount sa = new SavingsAccount("Riya", 50000, 1000);
         CurrentAccount ca = new CurrentAccount("Arjun", 100000, 20000);
 
-        // 1. Default method yearlyInterest() from InterestBearing interface
         System.out.println(sa.getOwnerName() + " (Savings @ " + sa.interestRate() + "%) Yearly Interest: Rs. "
                 + sa.yearlyInterest() + " | Monthly: Rs. " + sa.monthlyInterest());
 
-        // 2. Functional interface WithdrawRule implemented via Anonymous Class
         WithdrawRule anonRule = new WithdrawRule() {
             @Override
             public boolean allow(Account account, long amount) {
-                // Rule: amount must not exceed 25,000 per transaction
                 return amount <= 25000;
             }
         };
 
-        // 3. Functional interface WithdrawRule implemented via Lambda Expression
         WithdrawRule lambdaRule = (account, amount) -> amount <= 25000;
 
         System.out.println("AnonRule allow(20000):   " + anonRule.allow(sa, 20000));
@@ -269,13 +268,42 @@ public class MiniBank {
         System.out.println("LambdaRule allow(20000): " + lambdaRule.allow(sa, 20000));
         System.out.println("LambdaRule allow(30000): " + lambdaRule.allow(sa, 30000));
 
-        // 4. Marker interface Premium check
         System.out.println("Is SavingsAccount Premium? " + (sa instanceof Premium));
         System.out.println("Is CurrentAccount Premium? " + (ca instanceof Premium));
 
-        // 5. Service layer package check
         AccountService.printAccountSummary(sa);
 
         System.out.println("--- End of Practical 6 Demo ---");
+    }
+
+    /**
+     * Practical 7 demonstration: custom annotations (@Id, @Positive, @MaxLength) and reflection validation.
+     */
+    private static void demonstrateAnnotationsAndReflection() {
+        System.out.println();
+        System.out.println("--- Practical 7: Annotations & Reflection Demo ---");
+
+        // 1. Account with invalid negative balance (-100)
+        Account invalidAccount = new SavingsAccount("Riya", -100, 1000);
+        String[] invalidErrors = AnnotationValidator.validate(invalidAccount);
+        System.out.println("Validating account with balance -100:");
+        for (String err : invalidErrors) {
+            System.out.println("  Validation Error: " + err);
+        }
+
+        // 2. Account with valid positive balance (5000)
+        Account validAccount = new SavingsAccount("Riya", 5000, 1000);
+        String[] validErrors = AnnotationValidator.validate(validAccount);
+        System.out.println("Validating account with balance 5000: Errors count = " + validErrors.length);
+
+        // 3. Testing @MaxLength constraint on string field
+        Account longNameAccount = new SavingsAccount("VeryLongOwnerNameExceedingTwentyCharacters", 5000, 1000);
+        String[] maxLengthErrors = AnnotationValidator.validate(longNameAccount);
+        System.out.println("Validating account with long owner name (>20 chars):");
+        for (String err : maxLengthErrors) {
+            System.out.println("  Validation Error: " + err);
+        }
+
+        System.out.println("--- End of Practical 7 Demo ---");
     }
 }

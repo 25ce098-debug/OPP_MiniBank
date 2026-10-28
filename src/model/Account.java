@@ -1,6 +1,9 @@
 package model;
 
 import java.util.Objects;
+import model.annotation.Id;
+import model.annotation.MaxLength;
+import model.annotation.Positive;
 
 /**
  * Account — abstract bank account model.
@@ -10,14 +13,21 @@ import java.util.Objects;
  * Practical 3: toString, equals, hashCode.
  * Practical 5: Abstract class with interestRate() and canWithdraw().
  * Practical 6: Moved to model package, implements Transactable & InterestBearing.
+ * Practical 7: Custom annotations @Id, @Positive, @MaxLength and @Override annotations.
  */
 public abstract class Account implements Transactable, InterestBearing {
 
     private static long accountCounter = 0;
 
+    @Id
     private final String accountNumber;
+
+    @MaxLength(20)
     private String ownerName;
+
+    @Positive
     private long balance;
+
     private boolean active;
 
     /**

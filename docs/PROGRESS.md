@@ -47,3 +47,11 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ `java -jar minibank.jar` runs successfully; anonymous class and lambda match outputs; default method computes interest accurately; marker interface detected
 - **Tag:** `lab-06`
+
+## Practical 7 — Custom Annotations and Reflection
+- **Status:** ✅ Complete
+- **Files:** `src/model/annotation/Id.java`, `src/model/annotation/Positive.java`, `src/model/annotation/MaxLength.java`, `src/util/AnnotationValidator.java`, `src/model/Account.java` (annotated), `src/model/Customer.java` (annotated), `src/MiniBank.java` (updated)
+- **Concepts:** Standard annotations (`@Override`, `@FunctionalInterface`), custom annotations (`@Id`, `@Positive`, `@MaxLength`), meta-annotations (`@Target`, `@Retention(RUNTIME)`), Java reflection (`getDeclaredFields()`, `isAnnotationPresent()`, `setAccessible()`, `get()`), validating inherited fields
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ Account with negative balance correctly produces `must be > 0`; valid account returns 0 errors; `@MaxLength` flag triggers on overflow
+- **Tag:** `lab-07`

@@ -1,19 +1,28 @@
 package model;
 
+import model.annotation.Id;
+import model.annotation.MaxLength;
+
 /**
  * Customer — represents a bank customer with auto-generated ID.
  * Practical 2: encapsulation, static counter.
  * Practical 3: nested Address class, Cloneable.
  * Practical 6: moved into model package.
+ * Practical 7: @Id and @MaxLength annotations.
  */
 public class Customer implements Cloneable {
 
     private static long customerCounter = 100;
 
+    @Id
     private final String customerId;
+
     private String name;
     private String email;
+
+    @MaxLength(10)
     private String mobile;
+
     private Address address;
 
     /**
