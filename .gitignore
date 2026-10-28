@@ -1,0 +1,24 @@
+# Compiled class files
+out/
+*.class
+
+# JAR files (built artifacts)
+*.jar
+
+# Runtime data files
+data/
+logs/
+*.dat
+*.log
+
+# IDE folders
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
