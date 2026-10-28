@@ -4,6 +4,7 @@ import java.util.Scanner;
  * MiniBank — the main console banking application.
  * Practical 1: Menu shell with enum, record, switch expression.
  * Practical 2: Customer and Account classes with encapsulation.
+ * Practical 3: Object methods (toString, equals, hashCode), nested Address, clone.
  *
  * @author Bhavy Pan (25CE098)
  */
@@ -19,6 +20,9 @@ public class MiniBank {
 
         // --- Practical 2: Demonstrate Customer and Account ---
         demonstrateAccountsAndCustomers();
+
+        // --- Practical 3: Demonstrate Object Methods ---
+        demonstrateObjectMethods();
 
         // --- Menu Loop ---
         Scanner scanner = new Scanner(System.in);
@@ -107,5 +111,43 @@ public class MiniBank {
         System.out.println("Withdraw 3000 from " + accounts[0].getAccountNumber() + ": " + w1);
         System.out.println("Withdraw 10000 from " + accounts[0].getAccountNumber() + ": " + w2);
         System.out.println("--- End of Practical 2 Demo ---");
+    }
+
+    /**
+     * Practical 3 demonstration: toString, equals/hashCode, nested Address, clone.
+     */
+    private static void demonstrateObjectMethods() {
+        System.out.println();
+        System.out.println("--- Practical 3: Object Methods Demo ---");
+
+        // toString
+        Account a1 = new Account("Riya", 4000);
+        System.out.println("toString: " + a1);
+
+        // equals — we create two accounts and compare
+        // Since account numbers are auto-generated and unique, a1.equals(a1) is true
+        // but a different Account object will have a different number
+        Account a2 = new Account("Arjun", 2000);
+        System.out.println("a1.equals(a1): " + a1.equals(a1));
+        System.out.println("a1.equals(a2): " + a1.equals(a2));
+
+        // instanceof check
+        Object obj = a1;
+        System.out.println("obj instanceof Account: " + (obj instanceof Account));
+
+        // Customer with Address (nested class)
+        Customer c = new Customer("Riya", "riya@example.com", "9876543210");
+        Customer.Address addr = new Customer.Address("12 MG Road", "Anand", "388001");
+        c.setAddress(addr);
+        System.out.println("Customer: " + c);
+        System.out.println("Address city: " + c.getAddress().getCity());
+
+        // Clone
+        Customer cloned = c.clone();
+        System.out.println("Cloned customer: " + cloned);
+        System.out.println("Original == Clone: " + (c == cloned));
+        System.out.println("Original name equals clone: " + c.getName().equals(cloned.getName()));
+
+        System.out.println("--- End of Practical 3 Demo ---");
     }
 }

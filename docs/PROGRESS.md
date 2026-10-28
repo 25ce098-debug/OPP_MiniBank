@@ -15,3 +15,11 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ Deposit adds to balance, withdraw returns true/false correctly, balance cannot be set from outside
 - **Tag:** `lab-02`
+
+## Practical 3 — Object Methods, Nested Classes and Cloning
+- **Status:** ✅ Complete
+- **Files:** `src/Account.java` (toString, equals, hashCode), `src/Customer.java` (Address nested class, Cloneable, clone)
+- **Concepts:** toString, equals/hashCode contract, static nested class, Cloneable, clone(), instanceof
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ toString readable, equals works by accountNumber, Address nested class, clone creates separate copy
+- **Tag:** `lab-03`

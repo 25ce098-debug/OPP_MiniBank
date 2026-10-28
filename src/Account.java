@@ -1,7 +1,10 @@
+import java.util.Objects;
+
 /**
  * Account — represents a bank account with encapsulated balance.
  * Balance can only change through deposit() and withdraw(), never directly.
  * Demonstrates encapsulation, static counter, constructor chaining.
+ * Practical 3: toString, equals/hashCode based on accountNumber.
  */
 public class Account {
 
@@ -69,4 +72,27 @@ public class Account {
 
     public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
     public void setActive(boolean active)      { this.active = active; }
+
+    // --- Practical 3: Object methods ---
+
+    /**
+     * Returns a readable string like "AC0001 | Riya | Balance: 4000 | Active".
+     */
+    public String toString() {
+        return accountNumber + " | " + ownerName + " | Balance: " + balance
+                + " | " + (active ? "Active" : "Inactive");
+    }
+
+    /**
+     * Two accounts are equal when their accountNumber values are equal.
+     */
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Account other)) return false;
+        return Objects.equals(accountNumber, other.accountNumber);
+    }
+
+    public int hashCode() {
+        return Objects.hash(accountNumber);
+    }
 }
