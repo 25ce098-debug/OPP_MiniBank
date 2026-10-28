@@ -1,5 +1,8 @@
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 import model.*;
 import util.*;
@@ -25,6 +28,8 @@ import static util.Validator.*;
  *               deadlock simulation and deadlock prevention via consistent lock ordering.
  * Practical 11: File persistence (Object serialization), transaction logging (NIO),
  *               and report generation using DirectoryStream and attributes.
+ * Practical 12: Collections Framework (HashMap AccountStore, ArrayList history,
+ *               Comparator sortedByBalance descending, Comparable<Account>, ConcurrentHashMap).
  *
  * @author Bhavy Pan (25CE098)
  */
@@ -67,6 +72,9 @@ public class MiniBank {
 
         // --- Practical 11: Demonstrate Persistence, Logs and Reports ---
         demonstratePersistenceAndReports();
+
+        // --- Practical 12: Demonstrate Collections and Sorting ---
+        demonstrateCollectionsAndSorting();
 
         // --- Menu Loop ---
         Scanner scanner = new Scanner(System.in);
@@ -579,8 +587,7 @@ public class MiniBank {
     }
 
     /**
-     * Practical 11 demonstration: StatePersister (save/load accounts.dat), TransactionLog (NIO append),
-     * and ReportGenerator (DirectoryStream, attribute inspection, EOD summary).
+     * Practical 11 demonstration: StatePersister, TransactionLog, and ReportGenerator.
      */
     private static void demonstratePersistenceAndReports() {
         System.out.println();
@@ -591,7 +598,6 @@ public class MiniBank {
         Path logFile = logsDir.resolve("transactions.log");
         Path reportFile = logsDir.resolve("eod_report.txt");
 
-        // 1. Save accounts using StatePersister (ObjectOutputStream)
         Account[] originalAccounts = {
             new SavingsAccount("Riya", 5000, 1000),
             new CurrentAccount("Arjun", 2000, 5000),
@@ -603,7 +609,6 @@ public class MiniBank {
             StatePersister.save(originalAccounts, dataFile);
             System.out.println("Accounts successfully saved.");
 
-            // 2. Reload accounts using StatePersister (ObjectInputStream)
             System.out.println("\nReloading accounts from " + dataFile + "...");
             Account[] loadedAccounts = StatePersister.load(dataFile);
             System.out.println("Loaded " + loadedAccounts.length + " accounts:");
@@ -611,7 +616,6 @@ public class MiniBank {
                 System.out.println("  Restored: " + a);
             }
 
-            // Verify ID counter was updated to prevent collisions
             Account freshAccount = new SavingsAccount("Kavya", 3000, 500);
             System.out.println("Newly created account after reload: " + freshAccount.getAccountNumber()
                     + " (Confirmed no ID collision!)");
@@ -620,7 +624,6 @@ public class MiniBank {
             System.err.println("State persistence error: " + e.getMessage());
         }
 
-        // 3. Write transaction log entries using TransactionLog (NIO Files)
         try {
             System.out.println("\nLogging transactions to " + logFile + "...");
             TransactionLog.append(logFile, "DEPOSIT AC0001 500");
@@ -628,7 +631,6 @@ public class MiniBank {
             TransactionLog.append(logFile, "DEPOSIT AC0003 1000");
             System.out.println("Appended 3 transactions to log.");
 
-            // 4. Generate End-of-Day summary report
             System.out.println("\nGenerating report from logs directory (" + logsDir + ")...");
             String report = ReportGenerator.generateReport(logsDir, reportFile);
             System.out.println(report);
@@ -639,5 +641,55 @@ public class MiniBank {
         }
 
         System.out.println("--- End of Practical 11 Demo ---");
+    }
+
+    /**
+     * Practical 12 demonstration: Collections Framework (AccountStore, ArrayList,
+     * sorting with Comparator descending by balance, Comparable natural ordering).
+     */
+    private static void demonstrateCollectionsAndSorting() {
+        System.out.println();
+        System.out.println("--- Practical 12: Collections Framework Demo (Milestone 2) ---");
+
+        AccountStore store = new AccountStore();
+
+        // Three accounts as specified in the PDF input: balances 5000, 2000, 9000
+        Account acc1 = new SavingsAccount("Riya", 5000, 500);
+        Account acc2 = new CurrentAccount("Arjun", 2000, 2000);
+        Account acc3 = new SavingsAccount("Meera", 9000, 500);
+
+        store.add(acc1);
+        store.add(acc2);
+        store.add(acc3);
+
+        // 1. Fast lookup via HashMap
+        System.out.println("Lookup by account number (" + acc2.getAccountNumber() + "):");
+        Account found = store.get(acc2.getAccountNumber());
+        System.out.println("  Result: " + found);
+
+        // 2. Sorting by balance descending using Comparator
+        System.out.println("\nAccounts sorted by balance (Descending):");
+        ArrayList<Account> sorted = store.sortedByBalance();
+        for (Account a : sorted) {
+            System.out.println("  " + a.getAccountNumber() + " | " + a.getOwnerName()
+                    + " | Balance: Rs. " + a.getBalance());
+        }
+
+        // 3. Natural ordering using Comparable<Account> (sorted by accountNumber)
+        System.out.println("\nAccounts sorted by natural order (accountNumber via Comparable):");
+        List<Account> naturalOrder = new ArrayList<>(store.getAll());
+        Collections.sort(naturalOrder);
+        for (Account a : naturalOrder) {
+            System.out.println("  " + a.getAccountNumber() + " | " + a.getOwnerName()
+                    + " | Balance: Rs. " + a.getBalance());
+        }
+
+        // 4. Transaction history tracking with ArrayList
+        System.out.println("\nTransaction History from AccountStore:");
+        for (String record : store.getTransactionHistory()) {
+            System.out.println("  [History] " + record);
+        }
+
+        System.out.println("--- End of Practical 12 Demo ---");
     }
 }

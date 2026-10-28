@@ -1,23 +1,35 @@
 package service;
 
+import model.Account;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
  * TransactionProcessor — manages transaction execution on a fixed thread pool.
- * Demonstrates ExecutorService usage, batch submission, and clean shutdown.
+ * Supports concurrent account operations over a thread-safe ConcurrentHashMap store.
  */
 public class TransactionProcessor {
 
     private final ExecutorService executor;
+    private final ConcurrentHashMap<String, Account> concurrentAccounts;
+
+    public TransactionProcessor(int threads, ConcurrentHashMap<String, Account> sharedAccounts) {
+        this.executor = Executors.newFixedThreadPool(threads);
+        this.concurrentAccounts = sharedAccounts != null ? sharedAccounts : new ConcurrentHashMap<>();
+    }
 
     public TransactionProcessor(int threads) {
-        this.executor = Executors.newFixedThreadPool(threads);
+        this(threads, new ConcurrentHashMap<>());
     }
 
     public TransactionProcessor() {
-        this(4);
+        this(4, new ConcurrentHashMap<>());
+    }
+
+    public ConcurrentHashMap<String, Account> getConcurrentAccounts() {
+        return concurrentAccounts;
     }
 
     /**

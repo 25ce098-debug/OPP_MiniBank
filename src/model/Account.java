@@ -12,7 +12,7 @@ import model.annotation.Positive;
 
 /**
  * Account — abstract bank account model.
- * Implements Transactable, InterestBearing, and Serializable.
+ * Implements Transactable, InterestBearing, Serializable, and Comparable.
  *
  * Practical 2: Encapsulation, static counter.
  * Practical 3: toString, equals, hashCode.
@@ -22,8 +22,9 @@ import model.annotation.Positive;
  * Practical 8: Checked exceptions on deposit/withdraw, transfer with try-catch-finally.
  * Practical 9: Synchronized methods for thread-safety during concurrent operations.
  * Practical 11: Implements Serializable with serialVersionUID, ID collision prevention.
+ * Practical 12: Implements Comparable<Account> based on natural ordering of accountNumber.
  */
-public abstract class Account implements Transactable, InterestBearing, Serializable {
+public abstract class Account implements Transactable, InterestBearing, Serializable, Comparable<Account> {
 
     private static final long serialVersionUID = 2001L;
 
@@ -80,6 +81,12 @@ public abstract class Account implements Transactable, InterestBearing, Serializ
                 }
             } catch (NumberFormatException ignored) {}
         }
+    }
+
+    @Override
+    public int compareTo(Account other) {
+        if (other == null) return 1;
+        return this.accountNumber.compareTo(other.accountNumber);
     }
 
     @Override

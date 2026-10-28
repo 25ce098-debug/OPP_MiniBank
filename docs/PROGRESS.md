@@ -87,3 +87,11 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ Accounts saved to `accounts.dat` and reloaded with identical properties; ID collision prevention verified (`AC0023` created after `AC0022` loaded); NIO transaction log parsed to yield exact totals (Deposits: 1500, Withdrawals: 200, Net: 1300)
 - **Tag:** `lab-11`
+
+## Practical 12 — Collections Framework
+- **Status:** ✅ Complete
+- **Files:** `src/service/AccountStore.java`, `src/model/Account.java` (Comparable), `src/service/TransactionProcessor.java` (updated), `src/MiniBank.java` (updated)
+- **Concepts:** Java Collections Framework (`HashMap`, `ArrayList`, `ConcurrentHashMap`), key-based fast retrieval, custom sorting via `Comparator` (descending by balance), natural ordering via `Comparable<Account>` (`compareTo`), transaction auditing history
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ Lookup by account number retrieves matching record; `sortedByBalance()` correctly orders accounts descending (9000, 5000, 2000); `Collections.sort()` sorts natural order by account number
+- **Tag:** `lab-12`
