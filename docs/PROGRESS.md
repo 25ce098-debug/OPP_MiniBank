@@ -95,3 +95,11 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ Lookup by account number retrieves matching record; `sortedByBalance()` correctly orders accounts descending (9000, 5000, 2000); `Collections.sort()` sorts natural order by account number
 - **Tag:** `lab-12`
+
+## Practical 13 — Generics and Generic Repository
+- **Status:** ✅ Complete
+- **Files:** `src/service/Repository.java`, `src/MiniBank.java` (updated)
+- **Concepts:** Generic class `Repository<T>`, runtime reflection on `@Id` supporting superclass inheritance hierarchy, `@SafeVarargs` with `final saveAll(T... items)`, bounded type parameter `<N extends Number> double average(N[] values)`, generic repository reuse across types (`Account`, `Customer`)
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ `Repository<Account>` performs CRUD; `@Id` retrieved dynamically from superclass `Account`; `Repository<Customer>` works identically; bounded `average()` calculates numeric means across multiple types
+- **Tag:** `lab-13`

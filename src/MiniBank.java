@@ -30,6 +30,8 @@ import static util.Validator.*;
  *               and report generation using DirectoryStream and attributes.
  * Practical 12: Collections Framework (HashMap AccountStore, ArrayList history,
  *               Comparator sortedByBalance descending, Comparable<Account>, ConcurrentHashMap).
+ * Practical 13: Generic Repository<T> with reflection-based @Id key lookup,
+ *               @SafeVarargs saveAll, and bounded generic method <N extends Number> average.
  *
  * @author Bhavy Pan (25CE098)
  */
@@ -75,6 +77,9 @@ public class MiniBank {
 
         // --- Practical 12: Demonstrate Collections and Sorting ---
         demonstrateCollectionsAndSorting();
+
+        // --- Practical 13: Demonstrate Generics and Generic Repository ---
+        demonstrateGenericsAndRepository();
 
         // --- Menu Loop ---
         Scanner scanner = new Scanner(System.in);
@@ -644,8 +649,7 @@ public class MiniBank {
     }
 
     /**
-     * Practical 12 demonstration: Collections Framework (AccountStore, ArrayList,
-     * sorting with Comparator descending by balance, Comparable natural ordering).
+     * Practical 12 demonstration: Collections Framework.
      */
     private static void demonstrateCollectionsAndSorting() {
         System.out.println();
@@ -653,7 +657,6 @@ public class MiniBank {
 
         AccountStore store = new AccountStore();
 
-        // Three accounts as specified in the PDF input: balances 5000, 2000, 9000
         Account acc1 = new SavingsAccount("Riya", 5000, 500);
         Account acc2 = new CurrentAccount("Arjun", 2000, 2000);
         Account acc3 = new SavingsAccount("Meera", 9000, 500);
@@ -662,12 +665,10 @@ public class MiniBank {
         store.add(acc2);
         store.add(acc3);
 
-        // 1. Fast lookup via HashMap
         System.out.println("Lookup by account number (" + acc2.getAccountNumber() + "):");
         Account found = store.get(acc2.getAccountNumber());
         System.out.println("  Result: " + found);
 
-        // 2. Sorting by balance descending using Comparator
         System.out.println("\nAccounts sorted by balance (Descending):");
         ArrayList<Account> sorted = store.sortedByBalance();
         for (Account a : sorted) {
@@ -675,7 +676,6 @@ public class MiniBank {
                     + " | Balance: Rs. " + a.getBalance());
         }
 
-        // 3. Natural ordering using Comparable<Account> (sorted by accountNumber)
         System.out.println("\nAccounts sorted by natural order (accountNumber via Comparable):");
         List<Account> naturalOrder = new ArrayList<>(store.getAll());
         Collections.sort(naturalOrder);
@@ -684,12 +684,63 @@ public class MiniBank {
                     + " | Balance: Rs. " + a.getBalance());
         }
 
-        // 4. Transaction history tracking with ArrayList
         System.out.println("\nTransaction History from AccountStore:");
         for (String record : store.getTransactionHistory()) {
             System.out.println("  [History] " + record);
         }
 
         System.out.println("--- End of Practical 12 Demo ---");
+    }
+
+    /**
+     * Practical 13 demonstration: Generic Repository<T> using reflection on @Id,
+     * @SafeVarargs saveAll, bounded type parameter average method, and reuse with Customer.
+     */
+    private static void demonstrateGenericsAndRepository() {
+        System.out.println();
+        System.out.println("--- Practical 13: Generics & Generic Repository Demo ---");
+
+        // 1. Repository<Account> storing accounts via reflective @Id (from superclass Account)
+        Repository<Account> accountRepo = new Repository<>();
+        Account a1 = new SavingsAccount("Riya", 5000, 1000);
+        Account a2 = new CurrentAccount("Arjun", 2000, 5000);
+        Account a3 = new FixedDepositAccount("Meera", 10000);
+
+        // Save multiple using @SafeVarargs saveAll()
+        accountRepo.saveAll(a1, a2, a3);
+        System.out.println("Saved " + accountRepo.count() + " accounts into generic Repository<Account>.");
+
+        // Lookup by reflective ID
+        System.out.println("\nRepository findById(" + a2.getAccountNumber() + "):");
+        Account fetched = accountRepo.findById(a2.getAccountNumber());
+        System.out.println("  Found: " + fetched);
+
+        // Fetch all
+        System.out.println("\nRepository findAll():");
+        for (Account a : accountRepo.findAll()) {
+            System.out.println("  " + a);
+        }
+
+        // 2. Reuse generic Repository<Customer> without modifying Repository class
+        System.out.println("\nReusing Repository<T> for Customer objects:");
+        Repository<Customer> customerRepo = new Repository<>();
+        Customer c1 = new Customer("Riya", "riya@example.com", "9876543210");
+        Customer c2 = new Customer("Arjun", "arjun@example.com", "9123456780");
+        customerRepo.saveAll(c1, c2);
+
+        System.out.println("Saved " + customerRepo.count() + " customers. Lookup " + c1.getCustomerId() + ":");
+        Customer foundCustomer = customerRepo.findById(c1.getCustomerId());
+        System.out.println("  Found Customer: " + foundCustomer);
+
+        // 3. Generic bounded method: <N extends Number> average(N[] values)
+        Long[] accountBalances = { a1.getBalance(), a2.getBalance(), a3.getBalance() };
+        double avgBalance = Repository.average(accountBalances);
+        System.out.println("\nBounded Generic average() of balances: Rs. " + String.format("%.2f", avgBalance));
+
+        Double[] interestRates = { a1.interestRate(), a2.interestRate(), a3.interestRate() };
+        double avgRate = Repository.average(interestRates);
+        System.out.println("Bounded Generic average() of interest rates: " + String.format("%.2f", avgRate) + "%");
+
+        System.out.println("--- End of Practical 13 Demo ---");
     }
 }
