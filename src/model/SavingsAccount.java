@@ -2,9 +2,11 @@ package model;
 
 /**
  * SavingsAccount — account type with minimum balance requirement and 4.0% interest rate.
- * Extends Account, can also mark as Premium if balance is high.
+ * Extends Account. Serializable via inheritance.
  */
 public class SavingsAccount extends Account {
+
+    private static final long serialVersionUID = 2002L;
 
     private long minBalance;
 

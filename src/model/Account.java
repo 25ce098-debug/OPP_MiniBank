@@ -1,5 +1,6 @@
 package model;
 
+import java.io.Serializable;
 import java.util.Objects;
 import exception.AccountNotFoundException;
 import exception.BankException;
@@ -11,7 +12,7 @@ import model.annotation.Positive;
 
 /**
  * Account — abstract bank account model.
- * Implements Transactable (deposit, withdraw) and InterestBearing (yearlyInterest).
+ * Implements Transactable, InterestBearing, and Serializable.
  *
  * Practical 2: Encapsulation, static counter.
  * Practical 3: toString, equals, hashCode.
@@ -20,8 +21,11 @@ import model.annotation.Positive;
  * Practical 7: Custom annotations @Id, @Positive, @MaxLength and @Override annotations.
  * Practical 8: Checked exceptions on deposit/withdraw, transfer with try-catch-finally.
  * Practical 9: Synchronized methods for thread-safety during concurrent operations.
+ * Practical 11: Implements Serializable with serialVersionUID, ID collision prevention.
  */
-public abstract class Account implements Transactable, InterestBearing {
+public abstract class Account implements Transactable, InterestBearing, Serializable {
+
+    private static final long serialVersionUID = 2001L;
 
     private static long accountCounter = 0;
 
@@ -62,6 +66,20 @@ public abstract class Account implements Transactable, InterestBearing {
         this.ownerName = ownerName;
         this.balance = openingBalance;
         this.active = true;
+    }
+
+    /**
+     * Updates static counter to prevent ID collisions after deserializing accounts.
+     */
+    public static void updateCounterFromAccount(String accNum) {
+        if (accNum != null && accNum.startsWith("AC")) {
+            try {
+                long num = Long.parseLong(accNum.substring(2));
+                if (num > accountCounter) {
+                    accountCounter = num;
+                }
+            } catch (NumberFormatException ignored) {}
+        }
     }
 
     @Override
@@ -113,16 +131,15 @@ public abstract class Account implements Transactable, InterestBearing {
             to.deposit(amount);
         } catch (BankException e) {
             if (withdrawn) {
-                // Rollback withdrawal if deposit failed
                 try {
                     this.deposit(amount);
                 } catch (InvalidAmountException rollbackEx) {
-                    // Suppressed unexpected rollback failure
+                    // Suppressed
                 }
             }
             throw e;
         } finally {
-            // Execution audit log in finally block
+            // Audit log
         }
     }
 

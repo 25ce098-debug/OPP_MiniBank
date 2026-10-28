@@ -79,3 +79,11 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ Thread pool completes batch to Rs. 5500; Producer-Consumer processes items in lockstep; opposite-order locking deadlock isolated and verified; consistent lock ordering transfers concurrently without deadlock (Alice=9000, Bob=11000)
 - **Tag:** `lab-10`
+
+## Practical 11 — File Handling, Persistence and Reports
+- **Status:** ✅ Complete
+- **Files:** `src/util/StatePersister.java`, `src/util/TransactionLog.java`, `src/util/ReportGenerator.java`, `src/model/Account.java` (Serializable), `src/model/Customer.java` (Serializable), `src/MiniBank.java` (updated)
+- **Concepts:** Java Object Serialization (`Serializable`, `serialVersionUID`), `ObjectOutputStream`/`ObjectInputStream`, NIO `Path` and `Files`, `DirectoryStream`, `BasicFileAttributes`, append-only transaction logs, ID counter resynchronization upon state load, `.gitignore` excluding runtime files
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ Accounts saved to `accounts.dat` and reloaded with identical properties; ID collision prevention verified (`AC0023` created after `AC0022` loaded); NIO transaction log parsed to yield exact totals (Deposits: 1500, Withdrawals: 200, Net: 1300)
+- **Tag:** `lab-11`

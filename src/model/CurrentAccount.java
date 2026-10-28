@@ -6,6 +6,8 @@ package model;
  */
 public class CurrentAccount extends Account implements Premium {
 
+    private static final long serialVersionUID = 2003L;
+
     private long overdraftLimit;
 
     public CurrentAccount(String ownerName, long openingBalance, long overdraftLimit) {

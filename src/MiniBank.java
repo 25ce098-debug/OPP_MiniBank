@@ -1,3 +1,5 @@
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Scanner;
 import model.*;
 import util.*;
@@ -21,6 +23,8 @@ import static util.Validator.*;
  * Practical 9: Multithreading, Runnable workers, race conditions, method synchronization.
  * Practical 10: Transaction processor (Executors pool), producer-consumer buffer (wait/notify),
  *               deadlock simulation and deadlock prevention via consistent lock ordering.
+ * Practical 11: File persistence (Object serialization), transaction logging (NIO),
+ *               and report generation using DirectoryStream and attributes.
  *
  * @author Bhavy Pan (25CE098)
  */
@@ -60,6 +64,9 @@ public class MiniBank {
 
         // --- Practical 10: Demonstrate Transaction Processing and Deadlock Prevention ---
         demonstrateTransactionProcessingAndDeadlock();
+
+        // --- Practical 11: Demonstrate Persistence, Logs and Reports ---
+        demonstratePersistenceAndReports();
 
         // --- Menu Loop ---
         Scanner scanner = new Scanner(System.in);
@@ -424,7 +431,6 @@ public class MiniBank {
         long amountPerDeposit = 1;
         long expectedTotal = threadCount * depositsPerThread * amountPerDeposit;
 
-        // 1. Unsynchronized Race Condition
         System.out.println("Phase 1: Demonstrating Unsynchronized Race Condition on UnsafeAccount...");
         UnsafeAccount unsafeAccount = new UnsafeAccount(0);
         Thread[] unsafeThreads = new Thread[threadCount];
@@ -449,7 +455,6 @@ public class MiniBank {
         System.out.println("Actual Unsynchronized Balance: " + unsafeAccount.getBalance()
                 + " (Notice: data loss due to race condition!)");
 
-        // 2. Synchronized Thread-Safety with AccountWorker
         System.out.println("\nPhase 2: Running 10 Concurrent AccountWorker Threads on Synchronized Account...");
         Account safeAccount = new SavingsAccount("Concurrent Test", 0, 0);
         Thread[] safeThreads = new Thread[threadCount];
@@ -476,14 +481,12 @@ public class MiniBank {
     }
 
     /**
-     * Practical 10 demonstration: TransactionProcessor (pool of 4), producer-consumer buffer (wait/notify),
-     * deadlock simulation and deadlock prevention with lock ordering.
+     * Practical 10 demonstration: TransactionProcessor, producer-consumer buffer, deadlock prevention.
      */
     private static void demonstrateTransactionProcessingAndDeadlock() {
         System.out.println();
         System.out.println("--- Practical 10: Transaction Processor & Deadlock Demo ---");
 
-        // 1. TransactionProcessor with 4 threads executing a batch of deposits/withdrawals
         System.out.println("Phase 1: Batch Processing on Managed Thread Pool (size 4)...");
         Account batchAccount = new SavingsAccount("Batch User", 5000, 0);
         TransactionProcessor processor = new TransactionProcessor(4);
@@ -501,20 +504,18 @@ public class MiniBank {
             });
         }
         processor.stop();
-        // 10 deposits of 100 (+1000), 10 withdrawals of 50 (-500) -> Net +500 => 5500
         System.out.println("Batch execution finished. Account balance: Rs. " + batchAccount.getBalance()
                 + " (Expected: 5500)");
 
-        // 2. Producer-Consumer buffer using wait() and notifyAll()
         System.out.println("\nPhase 2: Producer-Consumer Coordination with wait()/notify()...");
-        TransactionBuffer buffer = new TransactionBuffer(2); // capacity of 2
+        TransactionBuffer buffer = new TransactionBuffer(2);
         Thread producer = new Thread(() -> {
             try {
                 for (int i = 1; i <= 4; i++) {
                     String tx = "TX-BATCH-" + i;
                     buffer.put(tx);
                     System.out.println("  [Producer] Put into buffer: " + tx);
-                    Thread.sleep(40);
+                    Thread.sleep(30);
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -526,7 +527,7 @@ public class MiniBank {
                 for (int i = 1; i <= 4; i++) {
                     String tx = buffer.take();
                     System.out.println("  [Consumer] Took from buffer: " + tx);
-                    Thread.sleep(80);
+                    Thread.sleep(60);
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -541,15 +542,12 @@ public class MiniBank {
             consumer.join();
         } catch (InterruptedException ignored) {}
 
-        // 3. Deadlock Demonstration and Prevention
         System.out.println("\nPhase 3: Deadlock Demonstration and Lock-Ordering Prevention...");
         Account accA = new SavingsAccount("AC0011", "Alice", 10000, 0);
         Account accB = new SavingsAccount("AC0012", "Bob", 10000, 0);
 
-        // Safe isolated demonstration of opposite locking
         DeadlockDemo.demonstrateOppositeLocking(accA, accB);
 
-        // Now demonstrate safe cross-transfer using consistent lock ordering (smaller account number first)
         System.out.println("  [Safe Lock-Ordering Transfer] Transferring A -> B and B -> A concurrently...");
         Thread tSafe1 = new Thread(() -> {
             try {
@@ -578,5 +576,68 @@ public class MiniBank {
                 + accA.getBalance() + " (Expected 9000), Bob=" + accB.getBalance() + " (Expected 11000)");
 
         System.out.println("--- End of Practical 10 Demo ---");
+    }
+
+    /**
+     * Practical 11 demonstration: StatePersister (save/load accounts.dat), TransactionLog (NIO append),
+     * and ReportGenerator (DirectoryStream, attribute inspection, EOD summary).
+     */
+    private static void demonstratePersistenceAndReports() {
+        System.out.println();
+        System.out.println("--- Practical 11: Persistence, Logs & Reports Demo ---");
+
+        Path dataFile = Path.of("data/accounts.dat");
+        Path logsDir = Path.of("logs");
+        Path logFile = logsDir.resolve("transactions.log");
+        Path reportFile = logsDir.resolve("eod_report.txt");
+
+        // 1. Save accounts using StatePersister (ObjectOutputStream)
+        Account[] originalAccounts = {
+            new SavingsAccount("Riya", 5000, 1000),
+            new CurrentAccount("Arjun", 2000, 5000),
+            new FixedDepositAccount("Meera", 10000)
+        };
+
+        try {
+            System.out.println("Saving " + originalAccounts.length + " accounts to " + dataFile + "...");
+            StatePersister.save(originalAccounts, dataFile);
+            System.out.println("Accounts successfully saved.");
+
+            // 2. Reload accounts using StatePersister (ObjectInputStream)
+            System.out.println("\nReloading accounts from " + dataFile + "...");
+            Account[] loadedAccounts = StatePersister.load(dataFile);
+            System.out.println("Loaded " + loadedAccounts.length + " accounts:");
+            for (Account a : loadedAccounts) {
+                System.out.println("  Restored: " + a);
+            }
+
+            // Verify ID counter was updated to prevent collisions
+            Account freshAccount = new SavingsAccount("Kavya", 3000, 500);
+            System.out.println("Newly created account after reload: " + freshAccount.getAccountNumber()
+                    + " (Confirmed no ID collision!)");
+
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("State persistence error: " + e.getMessage());
+        }
+
+        // 3. Write transaction log entries using TransactionLog (NIO Files)
+        try {
+            System.out.println("\nLogging transactions to " + logFile + "...");
+            TransactionLog.append(logFile, "DEPOSIT AC0001 500");
+            TransactionLog.append(logFile, "WITHDRAW AC0002 200");
+            TransactionLog.append(logFile, "DEPOSIT AC0003 1000");
+            System.out.println("Appended 3 transactions to log.");
+
+            // 4. Generate End-of-Day summary report
+            System.out.println("\nGenerating report from logs directory (" + logsDir + ")...");
+            String report = ReportGenerator.generateReport(logsDir, reportFile);
+            System.out.println(report);
+            System.out.println("Report written to " + reportFile);
+
+        } catch (IOException e) {
+            System.err.println("Logging/Report error: " + e.getMessage());
+        }
+
+        System.out.println("--- End of Practical 11 Demo ---");
     }
 }

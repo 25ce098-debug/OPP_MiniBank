@@ -1,5 +1,6 @@
 package model;
 
+import java.io.Serializable;
 import model.annotation.Id;
 import model.annotation.MaxLength;
 
@@ -9,8 +10,11 @@ import model.annotation.MaxLength;
  * Practical 3: nested Address class, Cloneable.
  * Practical 6: moved into model package.
  * Practical 7: @Id and @MaxLength annotations.
+ * Practical 11: implements Serializable with serialVersionUID.
  */
-public class Customer implements Cloneable {
+public class Customer implements Cloneable, Serializable {
+
+    private static final long serialVersionUID = 1001L;
 
     private static long customerCounter = 100;
 
@@ -38,6 +42,17 @@ public class Customer implements Cloneable {
     private static String generateCustomerId() {
         customerCounter++;
         return "CUST" + customerCounter;
+    }
+
+    public static void updateCounterFromId(String custId) {
+        if (custId != null && custId.startsWith("CUST")) {
+            try {
+                long num = Long.parseLong(custId.substring(4));
+                if (num > customerCounter) {
+                    customerCounter = num;
+                }
+            } catch (NumberFormatException ignored) {}
+        }
     }
 
     // --- Getters ---
@@ -79,7 +94,9 @@ public class Customer implements Cloneable {
     /**
      * Address — a static nested class holding address details.
      */
-    public static class Address {
+    public static class Address implements Serializable {
+        private static final long serialVersionUID = 1002L;
+
         private String line;
         private String city;
         private String pincode;
