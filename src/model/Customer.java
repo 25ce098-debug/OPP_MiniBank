@@ -1,7 +1,10 @@
+package model;
+
 /**
  * Customer — represents a bank customer with auto-generated ID.
  * Practical 2: encapsulation, static counter.
  * Practical 3: nested Address class, Cloneable.
+ * Practical 6: moved into model package.
  */
 public class Customer implements Cloneable {
 
@@ -44,15 +47,16 @@ public class Customer implements Cloneable {
     /**
      * Returns a shallow copy of this Customer.
      */
+    @Override
     public Customer clone() {
         try {
             return (Customer) super.clone();
         } catch (CloneNotSupportedException e) {
-            // Should not happen since we implement Cloneable
             throw new AssertionError("Clone not supported", e);
         }
     }
 
+    @Override
     public String toString() {
         String s = customerId + " | " + name + " | " + email + " | " + mobile;
         if (address != null) {
@@ -65,7 +69,6 @@ public class Customer implements Cloneable {
 
     /**
      * Address — a static nested class holding address details.
-     * Static nested class: does not need an instance of Customer to exist.
      */
     public static class Address {
         private String line;
@@ -82,9 +85,9 @@ public class Customer implements Cloneable {
         public String getCity()    { return city; }
         public String getPincode() { return pincode; }
 
+        @Override
         public String toString() {
             return line + ", " + city + " - " + pincode;
         }
     }
 }
-

@@ -1,13 +1,17 @@
+package model;
+
 import java.util.Objects;
 
 /**
- * Account — represents an abstract bank account with encapsulated balance.
- * Balance can only change through deposit() and withdraw(), never directly.
- * Demonstrates encapsulation, static counter, constructor chaining.
- * Practical 3: toString, equals/hashCode based on accountNumber.
- * Practical 5: abstract class with interestRate() and canWithdraw(amount).
+ * Account — abstract bank account model.
+ * Implements Transactable (deposit, withdraw) and InterestBearing (yearlyInterest).
+ *
+ * Practical 2: Encapsulation, static counter.
+ * Practical 3: toString, equals, hashCode.
+ * Practical 5: Abstract class with interestRate() and canWithdraw().
+ * Practical 6: Moved to model package, implements Transactable & InterestBearing.
  */
-public abstract class Account {
+public abstract class Account implements Transactable, InterestBearing {
 
     private static long accountCounter = 0;
 
@@ -17,8 +21,7 @@ public abstract class Account {
     private boolean active;
 
     /**
-     * Creates an account with a given owner name and opening balance.
-     * Account number is auto-generated (e.g., "AC0001").
+     * Creates an account with owner name and opening balance.
      */
     public Account(String ownerName, long openingBalance) {
         accountCounter++;
@@ -30,14 +33,13 @@ public abstract class Account {
 
     /**
      * Creates an account with zero opening balance.
-     * Demonstrates constructor chaining with this().
      */
     public Account(String ownerName) {
         this(ownerName, 0);
     }
 
     /**
-     * Protected constructor to allow controlled creation (e.g., testing equality).
+     * Protected constructor allowing controlled creation (e.g. testing equality).
      */
     protected Account(String accountNumber, String ownerName, long openingBalance) {
         this.accountNumber = accountNumber;
@@ -46,20 +48,12 @@ public abstract class Account {
         this.active = true;
     }
 
-    /**
-     * Abstract method returning annual interest rate percentage.
-     */
+    @Override
     public abstract double interestRate();
 
-    /**
-     * Abstract method determining if a withdrawal amount is allowed by subtype rules.
-     */
     public abstract boolean canWithdraw(long amount);
 
-    /**
-     * Adds the given amount to the balance.
-     * Rejects negative or zero amounts.
-     */
+    @Override
     public void deposit(long amount) {
         if (amount <= 0) {
             System.out.println("Deposit amount must be positive.");
@@ -68,51 +62,46 @@ public abstract class Account {
         balance += amount;
     }
 
-    /**
-     * Subtracts the given amount from the balance if allowed by subtype rules.
-     * @return true if withdrawal succeeded, false otherwise.
-     */
+    @Override
     public boolean withdraw(long amount) {
         if (amount <= 0) {
             System.out.println("Withdrawal amount must be positive.");
             return false;
         }
         if (!canWithdraw(amount)) {
-            return false; // insufficient funds or subtype rule restriction
+            return false;
         }
         balance -= amount;
         return true;
     }
 
-    // --- Getters (no public setter for balance) ---
+    // --- Getters ---
 
     public String getAccountNumber() { return accountNumber; }
     public String getOwnerName()     { return ownerName; }
-    public long   getBalance()       { return balance; }
+
+    @Override
+    public long getBalance()         { return balance; }
+
     public boolean isActive()        { return active; }
 
     public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
     public void setActive(boolean active)      { this.active = active; }
 
-    // --- Practical 3: Object methods ---
-
-    /**
-     * Returns a readable string like "AC0001 | Riya | Balance: 4000 | Active".
-     */
+    @Override
     public String toString() {
         return accountNumber + " | " + ownerName + " | Balance: " + balance
                 + " | " + (active ? "Active" : "Inactive");
     }
 
-    /**
-     * Two accounts are equal when their accountNumber values are equal.
-     */
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Account other)) return false;
         return Objects.equals(accountNumber, other.accountNumber);
     }
 
+    @Override
     public int hashCode() {
         return Objects.hash(accountNumber);
     }

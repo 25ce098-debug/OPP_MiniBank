@@ -1,8 +1,10 @@
+package model;
+
 /**
- * CurrentAccount — account type with an overdraft facility and 0.0% interest.
+ * CurrentAccount — account type with overdraft facility and 0.0% interest rate.
  * Extends Account. Allows balance to drop down to -overdraftLimit.
  */
-public class CurrentAccount extends Account {
+public class CurrentAccount extends Account implements Premium {
 
     private long overdraftLimit;
 
@@ -32,14 +34,17 @@ public class CurrentAccount extends Account {
         this.overdraftLimit = overdraftLimit;
     }
 
+    @Override
     public double interestRate() {
         return 0.0;
     }
 
+    @Override
     public boolean canWithdraw(long amount) {
         return (getBalance() - amount) >= -overdraftLimit;
     }
 
+    @Override
     public String toString() {
         return super.toString() + " | Current (Overdraft: " + overdraftLimit + ", Rate: " + interestRate() + "%)";
     }

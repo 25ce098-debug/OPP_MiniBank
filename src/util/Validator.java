@@ -1,11 +1,11 @@
+package util;
+
 import java.util.regex.Pattern;
 
 /**
  * Validator — validates user input using compiled regex patterns.
- * Mobile: 10-digit Indian number starting with 6-9.
- * Email: basic email pattern.
- * PAN: Indian PAN card format (5 letters, 4 digits, 1 letter).
- * IFSC: Indian bank IFSC code format (4 letters, 0, 6 digits/letters).
+ * Practical 4: Regex validation.
+ * Practical 6: Moved to util package.
  */
 public class Validator {
 
@@ -30,4 +30,3 @@ public class Validator {
         return ifsc != null && IFSC_PATTERN.matcher(ifsc).matches();
     }
 }
-

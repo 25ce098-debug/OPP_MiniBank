@@ -1,6 +1,8 @@
+package model;
+
 /**
- * SavingsAccount — account type with a minimum balance requirement and 4.0% interest.
- * Extends Account.
+ * SavingsAccount — account type with minimum balance requirement and 4.0% interest rate.
+ * Extends Account, can also mark as Premium if balance is high.
  */
 public class SavingsAccount extends Account {
 
@@ -32,14 +34,17 @@ public class SavingsAccount extends Account {
         this.minBalance = minBalance;
     }
 
+    @Override
     public double interestRate() {
         return 4.0;
     }
 
+    @Override
     public boolean canWithdraw(long amount) {
         return (getBalance() - amount) >= minBalance;
     }
 
+    @Override
     public String toString() {
         return super.toString() + " | Savings (Min: " + minBalance + ", Rate: " + interestRate() + "%)";
     }

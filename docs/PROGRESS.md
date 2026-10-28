@@ -39,3 +39,11 @@
 - **Compilation:** ✅ Successful
 - **Testing:** ✅ Dynamic dispatch on `Account[]` returns 4.0%, 0.0%, 7.0%; subtype withdrawal rules verified (Savings min-balance check, Current overdraft, FD locked)
 - **Tag:** `lab-05`
+
+## Practical 6 — Interfaces, Lambdas, Packages and JAR
+- **Status:** ✅ Complete
+- **Files:** `src/model/Transactable.java`, `src/model/InterestBearing.java`, `src/model/WithdrawRule.java`, `src/model/Premium.java`, `src/service/AccountService.java`, all models moved to `model`, utils moved to `util`, `Manifest.txt`, `src/MiniBank.java` (updated)
+- **Concepts:** Interfaces (`Transactable`), default methods (`InterestBearing.yearlyInterest()`), functional interfaces & lambdas vs anonymous class (`WithdrawRule`), marker interface (`Premium`), packages (`model`, `util`, `service`), static import (`Validator.*`), building & executing runnable JAR
+- **Compilation:** ✅ Successful
+- **Testing:** ✅ `java -jar minibank.jar` runs successfully; anonymous class and lambda match outputs; default method computes interest accurately; marker interface detected
+- **Tag:** `lab-06`

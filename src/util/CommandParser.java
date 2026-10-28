@@ -1,16 +1,14 @@
+package util;
+
+import model.Command;
+import model.TransactionType;
+
 /**
  * CommandParser — parses a text line into a Command object.
  * Expected format: "TYPE ACCOUNT_NUMBER AMOUNT"
- * Example: "DEPOSIT AC0001 500"
  */
 public class CommandParser {
 
-    /**
-     * Parses a line like "DEPOSIT AC0001 500" into a Command.
-     * @param line the input line to parse
-     * @return the parsed Command
-     * @throws IllegalArgumentException if the line format is invalid
-     */
     public static Command parse(String line) {
         if (line == null || line.isBlank()) {
             throw new IllegalArgumentException("Command line cannot be empty.");
@@ -41,4 +39,3 @@ public class CommandParser {
         return new Command(type, accountNumber, amount);
     }
 }
-

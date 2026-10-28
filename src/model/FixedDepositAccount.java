@@ -1,6 +1,8 @@
+package model;
+
 /**
  * FixedDepositAccount — account type with locked funds and 7.0% interest.
- * Extends Account. Withdrawals are locked (canWithdraw returns false).
+ * Extends Account. Withdrawals are locked.
  */
 public class FixedDepositAccount extends Account {
 
@@ -16,14 +18,17 @@ public class FixedDepositAccount extends Account {
         super(accountNumber, ownerName, openingBalance);
     }
 
+    @Override
     public double interestRate() {
         return 7.0;
     }
 
+    @Override
     public boolean canWithdraw(long amount) {
         return false; // locked deposit
     }
 
+    @Override
     public String toString() {
         return super.toString() + " | FixedDeposit (Locked, Rate: " + interestRate() + "%)";
     }

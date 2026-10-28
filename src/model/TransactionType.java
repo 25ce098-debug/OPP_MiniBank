@@ -1,3 +1,5 @@
+package model;
+
 /**
  * TransactionType — the types of banking transactions.
  */
@@ -6,4 +8,3 @@ public enum TransactionType {
     WITHDRAW,
     TRANSFER
 }
-
